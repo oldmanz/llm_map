@@ -1,12 +1,24 @@
 from fastapi import FastAPI, Query
+from fastapi.responses import JSONResponse
+
 import psycopg2
 import json
 import requests
 from shapely.geometry import shape
 from geojson import Feature, FeatureCollection
 import re
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Allow CORS for your frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:9000"],  # Adjust this to your frontend's URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Database connection
 DB_CONFIG = {
@@ -79,5 +91,5 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
     sql_query = natural_language_to_sql(nl_query)
     print('-----------------------------------------------------------------------')
     # return sql_query
-    geojson_data = query_postgis(sql_query)
-    return geojson_data
+    ids = query_postgis(sql_query)
+    return JSONResponse(content={"ids": ids})
