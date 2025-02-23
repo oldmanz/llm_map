@@ -63,8 +63,10 @@ def natural_language_to_sql(nl_query):
     - impervious_acres (float8, NULL)
     - group_id (int4, NULL)
 
-    I want all of the sql queries to be returned with 'group_id' = 110457 so that I can filter results for only this group.
+    I want all of the sql queries to be returned with 'group_id' = 114123 so that I can filter results for only this group.
     the properties table is in the schema `esg`
+
+    make all string comparisons case-insensitive
 
     Query: "{nl_query}"
 
@@ -90,6 +92,25 @@ def natural_language_to_sql(nl_query):
 def query_map(nl_query: str = Query(..., description="Natural language query")):
     sql_query = natural_language_to_sql(nl_query)
     print('-----------------------------------------------------------------------')
-    # return sql_query
     ids = query_postgis(sql_query)
+    # ids = [13510, 13508, 13504, 13505, 13511]
     return JSONResponse(content={"ids": ids})
+
+@app.get("/properties")
+def get_properties():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    cur.execute("SELECT id, st_asgeojson(geom) FROM esg.properties WHERE group_id = 114123 and geom is not null and city = 'Portland'")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    features = []
+    print('the count of rows are:', len(rows))
+    for row in rows:
+        geom = json.loads(row[1])
+        feature = Feature(geometry=geom, properties={"id": row[0]})
+        features.append(feature)
+
+    collection = FeatureCollection(features)
+    return JSONResponse(content=collection)
