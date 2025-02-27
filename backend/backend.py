@@ -14,7 +14,7 @@ app = FastAPI()
 # Allow CORS for your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9000"],  # Adjust this to your frontend's URL
+    allow_origins=["http://localhost:9002"],  # Adjust this to your frontend's URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,11 +22,11 @@ app.add_middleware(
 
 # Database connection
 DB_CONFIG = {
-    "dbname": "spatialdb",
+    "dbname": "llmmap",
     "user": "postgres",
     "password": "postgres",
-    "host": "localhost",
-    "port": "15432"
+    "host": "db",
+    "port": "5432"
 }
 
 def query_postgis(sql_query):
@@ -63,17 +63,19 @@ def natural_language_to_sql(nl_query):
     - impervious_acres (float8, NULL)
     - group_id (int4, NULL)
 
+    make all string comparisons case-insensitive
+
+    for and name queries, check both property_name and property_identifier columns
+
     I want all of the sql queries to be returned with 'group_id' = 114123 so that I can filter results for only this group.
     the properties table is in the schema `esg`
-
-    make all string comparisons case-insensitive
 
     Query: "{nl_query}"
 
     SQL:
     """
 
-    ollama_url = "http://localhost:11434/api/generate"  # Ollama runs locally
+    ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
     response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
@@ -100,7 +102,7 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
 def get_properties():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM esg.properties WHERE group_id = 114123 and geom is not null and city = 'Portland'")
+    cur.execute("SELECT id, st_asgeojson(geom) FROM test.properties WHERE group_id = 114123 and geom is not null and city = 'Portland'")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -114,3 +116,20 @@ def get_properties():
 
     collection = FeatureCollection(features)
     return JSONResponse(content=collection)
+
+@app.get("/test")
+def return_test():
+    print('the response is:', 'Hello, Nat Evatt!')
+    return JSONResponse(content={"message": "Hello, Nat Evatt!"})
+
+@app.get("/test-ollama")
+def test_ollama():
+    print('i am testing ollama again')
+    ollama_url = "http://ollama:11434/api/generate"  # Use the service name defined in docker-compose.yml
+    prompt = "Test prompt for llama3.2"
+    response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise HTTPException(status_code=response.status_code, detail="Failed to connect to Ollama service")
