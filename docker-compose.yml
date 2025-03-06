@@ -14,7 +14,16 @@ services:
   ollama:
     build: ./ollama
     container_name: ollama_llama3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
     ports:
       - "11434:11434"
     volumes:

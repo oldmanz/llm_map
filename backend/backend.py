@@ -68,7 +68,7 @@ def natural_language_to_sql(nl_query):
     for and name queries, check both property_name and property_identifier columns
 
     I want all of the sql queries to be returned with 'group_id' = 114123 so that I can filter results for only this group.
-    the properties table is in the schema `esg`
+    the properties table is in the schema `test`
 
     Query: "{nl_query}"
 
