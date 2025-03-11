@@ -1,4 +1,4 @@
-# My React App
+# LLM Map
 
 This is a React application built with TypeScript and bundled using Webpack.
 
@@ -25,17 +25,20 @@ my-react-app
 To get started with this project, follow these steps:
 
 1. Clone the repository:
+
    ```
    git clone <repository-url>
    cd my-react-app
    ```
 
 2. Install the dependencies:
+
    ```
    npm install
    ```
 
 3. Start the development server:
+
    ```
    npm start
    ```
