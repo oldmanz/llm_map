@@ -1,15 +1,13 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',
   entry: './src/index.tsx',
   output: {
-    filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/', // Add this line
+    filename: 'bundle.js',
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx', '.css'],
+    extensions: ['.tsx', '.ts', '.js'],
   },
   module: {
     rules: [
@@ -25,9 +23,11 @@ module.exports = {
     ],
   },
   devServer: {
-    contentBase: path.join(__dirname, 'public'),
+    static: {
+      directory: path.join(__dirname, 'public'),
+    },
     compress: true,
-    port: 9002,
+    port: 9001, // Change this to an available port
     historyApiFallback: true,
     host: '0.0.0.0',
     hot: true,

@@ -85,8 +85,12 @@ const App: React.FC = () => {
         apiKey="VrNApkggJ2WBH6PCzcJz"
         geoJsonData={geoJsonData}
       />
-      <Button title="Click Me!" count={count} handleClick={handleClick} />
-      <Button title="Don't Touch Me!" count={count} handleClick={handleClick} />
+      <Button
+        title="Click rasdfgasefergere!!!!"
+        count={count}
+        handleClick={handleClick}
+      />
+
       <ChatInput
         message={message}
         onMessageChange={handleInputChange}

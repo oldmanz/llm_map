@@ -1,7 +1,7 @@
 # frontend/Dockerfile
-FROM node:16
+FROM node:18
 
-WORKDIR /llm_map
+WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci
