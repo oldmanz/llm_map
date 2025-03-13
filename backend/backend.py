@@ -65,7 +65,7 @@ def natural_language_to_sql(nl_query):
 
     make all string comparisons case-insensitive
 
-    for and name queries, check both property_name and property_identifier columns
+    for queries about names only, check both property_name or property_identifier columns
 
     I want all of the sql queries to be returned with 'group_id' = 114123 so that I can filter results for only this group.
     the properties table is in the schema `test`

@@ -1,47 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/App.css';
 import Map from './Map';
-import Button from './Button';
 import ChatInput from './ChatInput';
+import { ApiCalls } from '../utils/apiCalls';
 
 const App: React.FC = () => {
-  const [count, setCount] = useState(0);
+  const [allProperties, setAllProperties] = useState<any[]>([]);
   const [message, setMessage] = useState('');
-  const [ids, setIds] = useState<Array<number>>([]);
+  const [ids, setIds] = useState<number[]>([]);
   const [geoJsonData, setGeoJsonData] = useState<{
     type: string;
     features: any[];
   } | null>(null);
-
-  const handleClick = () => {
-    setCount(count + 1);
-  };
 
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!message.trim()) return;
 
     try {
-      const urlSafeMessage = encodeURIComponent(message);
-      const response = await fetch(
-        `http://127.0.0.1:8001/query?nl_query=${urlSafeMessage}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      const data = await response.json();
+      const data = await ApiCalls.fetchLLMQueryProperties(message);
       setIds(data.ids);
 
-      const filteredFeatures =
-        geoJsonData?.features.filter((feature: any) =>
-          data.ids.includes(feature.properties.id),
-        ) || [];
+      const filteredFeatures = allProperties.filter((feature: any) =>
+        data.ids.includes(feature.properties.id),
+      );
 
-      // Update the geoJsonData state with the filtered features
       setGeoJsonData({
         type: 'FeatureCollection',
         features: filteredFeatures,
@@ -54,18 +37,15 @@ const App: React.FC = () => {
     setMessage('');
   };
 
-  const handleInputChange = (e: {
-    target: { value: React.SetStateAction<string> };
-  }) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
   };
 
   useEffect(() => {
-    // Fetch GeoJSON data when the component mounts
     const fetchGeoJsonData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8001/properties');
-        const data = await response.json();
+        const data = await ApiCalls.fetchAllProperties();
+        setAllProperties(data.features);
         setGeoJsonData(data);
       } catch (error) {
         console.error('Error fetching GeoJSON data:', error);
