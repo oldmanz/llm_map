@@ -8,6 +8,7 @@ const App: React.FC = () => {
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [message, setMessage] = useState('');
   const [ids, setIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
   const [geoJsonData, setGeoJsonData] = useState<{
     type: string;
     features: any[];
@@ -16,6 +17,8 @@ const App: React.FC = () => {
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!message.trim()) return;
+
+    setLoading(true);
 
     try {
       const data = await ApiCalls.fetchLLMQueryProperties(message);
@@ -32,6 +35,8 @@ const App: React.FC = () => {
       console.log('Server response:', data);
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setLoading(false);
     }
 
     setMessage('');
@@ -58,6 +63,11 @@ const App: React.FC = () => {
   return (
     <div className="container">
       <h1>LLM Map</h1>
+      {loading && (
+        <div className="spinner-overlay">
+          <div className="spinner"></div>
+        </div>
+      )}
       <Map
         lat={43.6541821442}
         lon={-70.2669021666}
