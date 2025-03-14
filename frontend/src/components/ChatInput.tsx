@@ -3,8 +3,10 @@ import React, { ChangeEvent, FormEvent } from 'react';
 interface ChatInputProps {
   message: string;
   onMessageChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onSaveQuery: () => void;
   onSend: (event: FormEvent<HTMLFormElement>) => void;
   ids: Array<number>;
+  submittedQuery: string;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -12,6 +14,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onMessageChange,
   onSend,
   ids,
+  submittedQuery,
+  onSaveQuery,
 }) => {
   return (
     <>
@@ -27,6 +31,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
           Send
         </button>
       </form>
+      <div>
+        <h2>Query:</h2>
+        <p
+          style={{
+            whiteSpace: 'pre-wrap',
+            backgroundColor: 'lightgray',
+            padding: '8px',
+          }}
+        >
+          {submittedQuery}
+        </p>
+        <button style={{ padding: '8px 16px' }} onClick={onSaveQuery}>
+          Save Query
+        </button>
+      </div>
       <ul>
         {ids.map((id, index) => (
           <li key={index}>{id}</li>

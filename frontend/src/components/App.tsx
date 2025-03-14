@@ -7,6 +7,7 @@ import { ApiCalls } from '../utils/apiCalls';
 const App: React.FC = () => {
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const [message, setMessage] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
   const [ids, setIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [geoJsonData, setGeoJsonData] = useState<{
@@ -32,6 +33,7 @@ const App: React.FC = () => {
         type: 'FeatureCollection',
         features: filteredFeatures,
       });
+      setSubmittedQuery(message);
       console.log('Server response:', data);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -44,6 +46,10 @@ const App: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value);
+  };
+
+  const handleSaveQuery = () => {
+    console.log('Save query');
   };
 
   useEffect(() => {
@@ -80,6 +86,8 @@ const App: React.FC = () => {
         onMessageChange={handleInputChange}
         onSend={handleChatSubmit}
         ids={ids}
+        submittedQuery={submittedQuery}
+        onSaveQuery={handleSaveQuery}
       />
     </div>
   );
