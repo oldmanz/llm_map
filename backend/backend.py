@@ -48,33 +48,36 @@ def query_postgis(sql_query):
 def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
     prompt = f"""
-    Convert this natural language query into a valid SQL statement for a PostGIS database with a 'properties' table. 
-    The table has the following columns:
-    - property_identifier (text, NULL)
-    - phase (text, NULL)
-    - address (text, NULL)
-    - city (text, NULL) 
-    - county (text, NULL)
-    - state (text, NULL) the states are written in full all lowercase (e.g., 'california')
-    - zip (text, NULL)
-    - property_type (text, NULL)
-    - property_name (text, NULL)
-    - property_acres (float8, NULL)
-    - impervious_acres (float8, NULL)
-    - group_id (int4, NULL)
+    Convert the following natural language query into a valid SQL statement for a PostGIS database.
 
-    make all string comparisons case-insensitive
+    ### Database Schema
+    The SQL query should reference the `test.properties` table, which has the following columns:
+    - `property_identifier` (TEXT, NULL)
+    - `phase` (TEXT, NULL)
+    - `address` (TEXT, NULL)
+    - `city` (TEXT, NULL)
+    - `county` (TEXT, NULL)
+    - `state` (TEXT, NULL) — states are written in full, all lowercase (e.g., 'california')
+    - `zip` (TEXT, NULL)
+    - `property_type` (TEXT, NULL)
+    - `property_name` (TEXT, NULL)
+    - `property_acres` (FLOAT8, NULL)
+    - `impervious_acres` (FLOAT8, NULL)
+    - `group_id` (INT4, NULL)
 
-    for queries about names only, check both property_name or property_identifier columns
+    ### Query Requirements
+    - Ensure **all string comparisons are case-insensitive**.
+    - If the query pertains to "name," search both `property_name` and `property_identifier`.
+    - Always filter results to include only rows where `group_id = 114123`.
 
-    I want all of the sql queries to be returned with 'group_id' = 114123 so that I can filter results for only this group.
-    the properties table is in the schema `test`
+    ### Input
+    Natural Language Query: "{nl_query}"
 
-    Query: "{nl_query}"
+    ### Output
+    Return only the valid SQL query.
 
     SQL:
-    """
-
+        """
     ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
     response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
     
@@ -84,6 +87,8 @@ def natural_language_to_sql(nl_query):
             sql_query = match.group(0).strip()
             sql_query = sql_query.replace('\\n', ' ').replace('\\u003e', '>').replace('\\u003c', '<')
             print('the response is:', sql_query)
+            # Wrap the generated SQL query to select only the id column
+            sql_query = f"SELECT id FROM ({sql_query[:-1]}) AS subquery;"
             return sql_query
         else:
             return "ERROR: SQL query not found in the response."
@@ -95,7 +100,6 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
     sql_query = natural_language_to_sql(nl_query)
     print('-----------------------------------------------------------------------')
     ids = query_postgis(sql_query)
-    # ids = [13510, 13508, 13504, 13505, 13511]
     return JSONResponse(content={"ids": ids})
 
 @app.get("/properties")
