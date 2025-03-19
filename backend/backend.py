@@ -86,23 +86,37 @@ def get_properties_prompt(nl_query):
     return prompt
 
 def get_parks_prompt(nl_query):
-    """Return the prompt for the parks table."""
+    """Return the prompt for the parks and fountains tables."""
     prompt = f"""
     Convert the following natural language query into a valid SQL statement for a PostGIS database.
     
     ### Database Schema
-    The SQL query should reference the `london.parks` table, which has the following columns:
-    - `id` (INT4, NOT NULL)
-    - `osm_id` (TEXT, NULL)
-    - `name` (TEXT, NULL)
-    - `operator` (TEXT, NULL)
-    - `note` (TEXT, NULL)
-    - `geom` (GEOMETRY, NULL)
+    The database contains the following tables:
+
+    1. `london.parks`:
+       - `id` (INT4, NOT NULL)
+       - `osm_id` (TEXT, NULL)
+       - `name` (TEXT, NULL)
+       - `operator` (TEXT, NULL)
+       - `note` (TEXT, NULL)
+       - `geom` (GEOMETRY, NULL)
+
+    2. `london.fountains`:
+       - `id` (INT4, NOT NULL)
+       - `osm_id` (TEXT, NULL)
+       - `name` (TEXT, NULL)
+       - `note` (TEXT, NULL)
+       - `geom` (GEOMETRY, NULL)
 
     ### Query Requirements
     - Ensure **all string comparisons are case-insensitive**.
+    - If the query involves spatial relationships (e.g., "inside," "within," "near"), use appropriate PostGIS functions like `ST_Within` or `ST_Intersects`.
     - If the query has the words empty or null, check for null values and empty strings in the column.
     - Always include the `id` column in the SELECT statement.
+
+    ### Example Queries
+    - Find all fountains inside parks: Use `ST_Within(fountains.geom, parks.geom)`.
+    - Find all parks that contain fountains: Use `ST_Within(fountains.geom, parks.geom)` with a `JOIN`.
 
     ### Input
     Natural Language Query: "{nl_query}"
@@ -179,6 +193,23 @@ def get_parks():
 
     collection = FeatureCollection(features)
     return JSONResponse(content=collection)
+
+@app.get("/get-park-popup-properties")
+def get_park_popup_properties(park_id: int):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM london.parks WHERE id = {park_id}")
+    row = cur.fetchone()
+    # column_names = [desc[0] for desc in cur.description] 
+    column_names = ['id', 'osm_id', 'name', 'operator', 'note']
+    cur.close()
+    conn.close()
+
+    if row:
+        properties = {column_names[i]: row[i] for i in range(len(column_names))}
+        return JSONResponse(content=properties)
+    else:
+        return JSONResponse(content={"error": "Park not found."})
 
 @app.get("/test")
 def return_test():
