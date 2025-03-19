@@ -22,4 +22,9 @@ export class ApiCalls {
     const response = await fetch('http://127.0.0.1:8001/properties');
     return await response.json();
   }
+
+  static async fetchAllParks() {
+    const response = await fetch('http://127.0.0.1:8001/parks');
+    return await response.json();
+  }
 }

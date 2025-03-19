@@ -55,7 +55,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchGeoJsonData = async () => {
       try {
-        const data = await ApiCalls.fetchAllProperties();
+        const data = await ApiCalls.fetchAllParks();
         setAllProperties(data.features);
         setGeoJsonData(data);
       } catch (error) {
@@ -75,8 +75,8 @@ const App: React.FC = () => {
         </div>
       )}
       <Map
-        lat={43.6541821442}
-        lon={-70.2669021666}
+        lat={51.50634440212}
+        lon={-0.1259234169603}
         zoom={14}
         apiKey="VrNApkggJ2WBH6PCzcJz"
         geoJsonData={geoJsonData}

@@ -45,8 +45,8 @@ def query_postgis(sql_query):
     
     return ids
 
-def natural_language_to_sql(nl_query):
-    """Convert NL query to SQL using a local Ollama LLM."""
+def get_properties_prompt(nl_query):
+    """Return the prompt for the properties table."""
     prompt = f"""
     Convert the following natural language query into a valid SQL statement for a PostGIS database.
 
@@ -82,7 +82,41 @@ def natural_language_to_sql(nl_query):
     Return only the valid SQL query.
 
     SQL:
-        """
+    """
+    return prompt
+
+def get_parks_prompt(nl_query):
+    """Return the prompt for the parks table."""
+    prompt = f"""
+    Convert the following natural language query into a valid SQL statement for a PostGIS database.
+    
+    ### Database Schema
+    The SQL query should reference the `london.parks` table, which has the following columns:
+    - `id` (INT4, NOT NULL)
+    - `osm_id` (TEXT, NULL)
+    - `name` (TEXT, NULL)
+    - `operator` (TEXT, NULL)
+    - `note` (TEXT, NULL)
+    - `geom` (GEOMETRY, NULL)
+
+    ### Query Requirements
+    - Ensure **all string comparisons are case-insensitive**.
+    - If the query has the words empty or null, check for null values and empty strings in the column.
+    - Always include the `id` column in the SELECT statement.
+
+    ### Input
+    Natural Language Query: "{nl_query}"
+
+    ### Output
+    Return only the valid SQL query.
+
+    SQL:
+    """
+    return prompt
+
+def natural_language_to_sql(nl_query):
+    """Convert NL query to SQL using a local Ollama LLM."""
+    prompt = get_parks_prompt(nl_query)
     ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
     response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
     
@@ -92,10 +126,8 @@ def natural_language_to_sql(nl_query):
             sql_query = match.group(0).strip()
             sql_query = sql_query.replace('\\n', ' ').replace('\\u003e', '>').replace('\\u003c', '<')
             print('the response is:', sql_query)
-            # Ensure the SQL query includes the id column
             if "id" not in sql_query.lower():
                 sql_query = sql_query.replace("SELECT", "SELECT id, ", 1)
-            # Wrap the generated SQL query to select only the id column
             sql_query = f"SELECT id FROM ({sql_query[:-1]}) AS subquery;"
             return sql_query
         else:
@@ -115,6 +147,25 @@ def get_properties():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
     cur.execute("SELECT id, st_asgeojson(geom) FROM test.properties WHERE group_id = 114123 and geom is not null and city = 'Portland'")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    features = []
+    print('the count of rows are:', len(rows))
+    for row in rows:
+        geom = json.loads(row[1])
+        feature = Feature(geometry=geom, properties={"id": row[0]})
+        features.append(feature)
+
+    collection = FeatureCollection(features)
+    return JSONResponse(content=collection)
+
+@app.get("/parks")
+def get_parks():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    cur.execute("SELECT id, st_asgeojson(geom) FROM london.parks")
     rows = cur.fetchall()
     cur.close()
     conn.close()
