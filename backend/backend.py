@@ -198,10 +198,11 @@ def get_parks():
 def get_park_popup_properties(park_id: int):
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM london.parks WHERE id = {park_id}")
-    row = cur.fetchone()
-    # column_names = [desc[0] for desc in cur.description] 
+
     column_names = ['id', 'osm_id', 'name', 'operator', 'note']
+    columns_sql = ", ".join(column_names)
+    cur.execute(f"SELECT {columns_sql} FROM london.parks WHERE id = {park_id}")
+    row = cur.fetchone()
     cur.close()
     conn.close()
 
