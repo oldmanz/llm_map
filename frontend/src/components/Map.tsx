@@ -105,7 +105,8 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
     mapRef.current.on('click', layerId, async (e) => {
       const features = e.features;
       if (features && features.length > 0) {
-        const properties = await ApiCalls.getParkPopupProperties(
+        const properties = await ApiCalls.getLayerPopupProperties(
+          layerId,
           features[0].properties.id,
         );
         const coordinates = e.lngLat;

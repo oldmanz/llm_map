@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
-
+from backend_constants import LAYER_COLUMNS
 import psycopg2
 import json
 import requests
@@ -173,25 +173,6 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
     ids = query_postgis(sql_query)
     return JSONResponse(content={"ids": ids})
 
-@app.get("/properties")
-def get_properties():
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM test.properties WHERE group_id = 114123 and geom is not null and city = 'Portland'")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    features = []
-    print('the count of rows are:', len(rows))
-    for row in rows:
-        geom = json.loads(row[1])
-        feature = Feature(geometry=geom, properties={"id": row[0]})
-        features.append(feature)
-
-    collection = FeatureCollection(features)
-    return JSONResponse(content=collection)
-
 @app.get("/parks")
 def get_parks():
     conn = psycopg2.connect(**DB_CONFIG)
@@ -230,14 +211,14 @@ def get_parks():
     collection = FeatureCollection(features)
     return JSONResponse(content=collection)
 
-@app.get("/get-park-popup-properties")
-def get_park_popup_properties(park_id: int):
+@app.get("/get-layer-popup-properties")
+def get_park_popup_properties(layer: str, park_id: int):
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    column_names = ['id', 'osm_id', 'name', 'operator', 'note']
+    column_names = LAYER_COLUMNS[layer]
     columns_sql = ", ".join(column_names)
-    cur.execute(f"SELECT {columns_sql} FROM layers.parks WHERE id = {park_id}")
+    cur.execute(f"SELECT {columns_sql} FROM layers.{layer} WHERE id = {park_id}")
     row = cur.fetchone()
     cur.close()
     conn.close()

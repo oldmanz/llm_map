@@ -33,9 +33,9 @@ export class ApiCalls {
     return await response.json();
   }
 
-  static async getParkPopupProperties(parkId: number) {
+  static async getLayerPopupProperties(layerId: string, parkId: number) {
     const response = await fetch(
-      `http://127.0.0.1:8001/get-park-popup-properties?park_id=${parkId}`,
+      `http://127.0.0.1:8001/get-layer-popup-properties?layer=${layerId}&park_id=${parkId}`,
     );
     return await response.json();
   }
