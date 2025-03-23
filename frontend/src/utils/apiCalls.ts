@@ -18,18 +18,10 @@ export class ApiCalls {
     return response.json();
   }
 
-  static async fetchAllProperties() {
-    const response = await fetch('http://127.0.0.1:8001/properties');
-    return await response.json();
-  }
-
   static async fetchGeoJson(layerName: string) {
-    const response = await fetch(`http://127.0.0.1:8001/${layerName}`);
-    return await response.json();
-  }
-
-  static async fetchAllParks() {
-    const response = await fetch('http://127.0.0.1:8001/parks');
+    const response = await fetch(
+      `http://127.0.0.1:8001/get-layer-geojson?layer=${layerName}`,
+    );
     return await response.json();
   }
 

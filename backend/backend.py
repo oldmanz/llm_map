@@ -173,44 +173,6 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
     ids = query_postgis(sql_query)
     return JSONResponse(content={"ids": ids})
 
-@app.get("/parks")
-def get_parks():
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM layers.parks")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    features = []
-    print('the count of rows are:', len(rows))
-    for row in rows:
-        geom = json.loads(row[1])
-        feature = Feature(geometry=geom, properties={"id": row[0]})
-        features.append(feature)
-
-    collection = FeatureCollection(features)
-    return JSONResponse(content=collection)
-
-@app.get("/fountains")
-def get_parks():
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM layers.fountains")
-    rows = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    features = []
-    print('the count of rows are:', len(rows))
-    for row in rows:
-        geom = json.loads(row[1])
-        feature = Feature(geometry=geom, properties={"id": row[0]})
-        features.append(feature)
-
-    collection = FeatureCollection(features)
-    return JSONResponse(content=collection)
-
 @app.get("/get-layer-popup-properties")
 def get_park_popup_properties(layer: str, park_id: int):
     conn = psycopg2.connect(**DB_CONFIG)
@@ -228,6 +190,37 @@ def get_park_popup_properties(layer: str, park_id: int):
         return JSONResponse(content=properties)
     else:
         return JSONResponse(content={"error": "Park not found."})
+
+@app.get("/get-layer-geojson")
+def get_layer_geojson(layer: str):
+    # Validate the requested layer
+    if layer not in LAYER_COLUMNS:
+        return JSONResponse(content={"error": f"Layer '{layer}' not found."}, status_code=400)
+
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
+
+        # Query the database for the layer's geometry and ID
+        cur.execute(f"SELECT id, ST_AsGeoJSON(geom) FROM layers.{layer}")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        # Convert rows to GeoJSON features
+        features = []
+        for row in rows:
+            geom = json.loads(row[1])  # Parse the GeoJSON geometry
+            feature = Feature(geometry=geom, properties={"id": row[0]})
+            features.append(feature)
+
+        # Create a GeoJSON FeatureCollection
+        collection = FeatureCollection(features)
+        return JSONResponse(content=collection)
+
+    except Exception as e:
+        print(f"Error fetching GeoJSON for layer '{layer}': {e}")
+        return JSONResponse(content={"error": "An error occurred while fetching the layer data."}, status_code=500)
 
 @app.get("/test-ollama")
 def test_ollama():
