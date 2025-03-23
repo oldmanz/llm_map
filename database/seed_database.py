@@ -16,7 +16,7 @@ GEOJSON_FOLDER = '/docker-entrypoint-initdb.d/central_london_geodata'
 
 def create_schema(cur):
     # Create the schema if it does not exist
-    cur.execute("CREATE SCHEMA IF NOT EXISTS london;")
+    cur.execute("CREATE SCHEMA IF NOT EXISTS layers;")
 
 def create_table(cur, table_name, properties):
     columns = ['id SERIAL PRIMARY KEY']
@@ -32,7 +32,7 @@ def create_table(cur, table_name, properties):
 
     columns.append('geom GEOMETRY')
     columns_sql = ', '.join(columns)
-    create_table_sql = f'CREATE TABLE IF NOT EXISTS london."{table_name}" ({columns_sql});'
+    create_table_sql = f'CREATE TABLE IF NOT EXISTS layers."{table_name}" ({columns_sql});'
     cur.execute(create_table_sql)
 
 def gather_unique_properties(geojson_data):
@@ -70,7 +70,7 @@ def seed_database():
                     properties = feature['properties']
                     columns = ', '.join([f'"{key}"' for key in properties.keys()])
                     values = ', '.join([f'%s' for _ in properties.values()])
-                    insert_sql = f'INSERT INTO london."{table_name}" ({columns}, geom) VALUES ({values}, ST_GeomFromGeoJSON(%s));'
+                    insert_sql = f'INSERT INTO layers."{table_name}" ({columns}, geom) VALUES ({values}, ST_GeomFromGeoJSON(%s));'
                     cur.execute(insert_sql, list(properties.values()) + [geom])
 
     # Commit the transaction and close the connection

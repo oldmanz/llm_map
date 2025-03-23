@@ -93,7 +93,7 @@ def get_parks_prompt(nl_query):
     ### Database Schema
     The database contains the following tables:
 
-    1. `london.parks`:
+    1. `layers.parks`:
        - `id` (INT4, NOT NULL)
        - `osm_id` (TEXT, NULL)
        - `name` (TEXT, NULL)
@@ -101,7 +101,7 @@ def get_parks_prompt(nl_query):
        - `note` (TEXT, NULL)
        - `geom` (GEOMETRY, NULL)
 
-    2. `london.fountains`:
+    2. `layers.fountains`:
        - `id` (INT4, NOT NULL)
        - `osm_id` (TEXT, NULL)
        - `name` (TEXT, NULL)
@@ -120,15 +120,15 @@ def get_parks_prompt(nl_query):
     - Find all fountains inside parks (if geometries are in the same SRID): 
       ```sql
       SELECT fountains.id
-      FROM london.fountains
-      JOIN london.parks
+      FROM layers.fountains
+      JOIN layers.parks
       ON ST_Within(fountains.geom, parks.geom);
       ```
     - Find all fountains inside parks (if geometries are in different SRIDs): 
       ```sql
       SELECT fountains.id
-      FROM london.fountains
-      JOIN london.parks
+      FROM layers.fountains
+      JOIN layers.parks
       ON ST_Within(
           ST_Transform(fountains.geom, 4326),
           ST_Transform(parks.geom, 4326)
@@ -196,7 +196,7 @@ def get_properties():
 def get_parks():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM london.parks")
+    cur.execute("SELECT id, st_asgeojson(geom) FROM layers.parks")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -215,7 +215,7 @@ def get_parks():
 def get_parks():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
-    cur.execute("SELECT id, st_asgeojson(geom) FROM london.fountains")
+    cur.execute("SELECT id, st_asgeojson(geom) FROM layers.fountains")
     rows = cur.fetchall()
     cur.close()
     conn.close()
@@ -237,7 +237,7 @@ def get_park_popup_properties(park_id: int):
 
     column_names = ['id', 'osm_id', 'name', 'operator', 'note']
     columns_sql = ", ".join(column_names)
-    cur.execute(f"SELECT {columns_sql} FROM london.parks WHERE id = {park_id}")
+    cur.execute(f"SELECT {columns_sql} FROM layers.parks WHERE id = {park_id}")
     row = cur.fetchone()
     cur.close()
     conn.close()
@@ -247,11 +247,6 @@ def get_park_popup_properties(park_id: int):
         return JSONResponse(content=properties)
     else:
         return JSONResponse(content={"error": "Park not found."})
-
-@app.get("/test")
-def return_test():
-    print('the response is:', 'Hello, Nat Evatt!')
-    return JSONResponse(content={"message": "Hello, Nat Evatt!"})
 
 @app.get("/test-ollama")
 def test_ollama():
