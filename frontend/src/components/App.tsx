@@ -10,10 +10,9 @@ const App: React.FC = () => {
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [ids, setIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
-  const [geoJsonData, setGeoJsonData] = useState<{
-    type: string;
-    features: any[];
-  } | null>(null);
+  const [geoJsonData, setGeoJsonData] = useState<Record<string, any> | null>(
+    null,
+  );
 
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -54,10 +53,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const fetchGeoJsonData = async () => {
+      const layerNames = ['parks', 'fountains']; // Define the layers you want to fetch
+      const geoJsonData: Record<string, any> = {}; // Initialize an empty object to store GeoJSON data
+
       try {
-        const data = await ApiCalls.fetchAllParks();
-        setAllProperties(data.features);
-        setGeoJsonData(data);
+        // Fetch GeoJSON data for each layer
+        for (const layerName of layerNames) {
+          const data = await ApiCalls.fetchGeoJson(layerName); // Fetch GeoJSON for the layer
+          geoJsonData[layerName] = data; // Add the fetched data to the geoJsonData object
+        }
+
+        setGeoJsonData(geoJsonData); // Update the state with the structured GeoJSON data
       } catch (error) {
         console.error('Error fetching GeoJSON data:', error);
       }
@@ -79,7 +85,7 @@ const App: React.FC = () => {
         lon={-0.1259234169603}
         zoom={14}
         apiKey="VrNApkggJ2WBH6PCzcJz"
-        geoJsonData={geoJsonData}
+        geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
       />
       <ChatInput
         message={message}

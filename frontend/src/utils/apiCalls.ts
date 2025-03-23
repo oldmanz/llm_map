@@ -23,6 +23,11 @@ export class ApiCalls {
     return await response.json();
   }
 
+  static async fetchGeoJson(layerName: string) {
+    const response = await fetch(`http://127.0.0.1:8001/${layerName}`);
+    return await response.json();
+  }
+
   static async fetchAllParks() {
     const response = await fetch('http://127.0.0.1:8001/parks');
     return await response.json();

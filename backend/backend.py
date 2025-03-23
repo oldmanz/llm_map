@@ -111,12 +111,29 @@ def get_parks_prompt(nl_query):
     ### Query Requirements
     - Ensure **all string comparisons are case-insensitive**.
     - If the query involves spatial relationships (e.g., "inside," "within," "near"), use appropriate PostGIS functions like `ST_Within` or `ST_Intersects`.
+    - If spatial transformations are required (i.e., geometries are in different SRIDs), use `ST_Transform(geometry, target_srid)` and specify the SRID explicitly (e.g., 4326 for WGS 84).
+    - If all geometries are already in the same SRID, do not use `ST_Transform`.
     - If the query has the words empty or null, check for null values and empty strings in the column.
     - Always include the `id` column in the SELECT statement.
 
     ### Example Queries
-    - Find all fountains inside parks: Use `ST_Within(fountains.geom, parks.geom)`.
-    - Find all parks that contain fountains: Use `ST_Within(fountains.geom, parks.geom)` with a `JOIN`.
+    - Find all fountains inside parks (if geometries are in the same SRID): 
+      ```sql
+      SELECT fountains.id
+      FROM london.fountains
+      JOIN london.parks
+      ON ST_Within(fountains.geom, parks.geom);
+      ```
+    - Find all fountains inside parks (if geometries are in different SRIDs): 
+      ```sql
+      SELECT fountains.id
+      FROM london.fountains
+      JOIN london.parks
+      ON ST_Within(
+          ST_Transform(fountains.geom, 4326),
+          ST_Transform(parks.geom, 4326)
+      );
+      ```
 
     ### Input
     Natural Language Query: "{nl_query}"
@@ -180,6 +197,25 @@ def get_parks():
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
     cur.execute("SELECT id, st_asgeojson(geom) FROM london.parks")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    features = []
+    print('the count of rows are:', len(rows))
+    for row in rows:
+        geom = json.loads(row[1])
+        feature = Feature(geometry=geom, properties={"id": row[0]})
+        features.append(feature)
+
+    collection = FeatureCollection(features)
+    return JSONResponse(content=collection)
+
+@app.get("/fountains")
+def get_parks():
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+    cur.execute("SELECT id, st_asgeojson(geom) FROM london.fountains")
     rows = cur.fetchall()
     cur.close()
     conn.close()
