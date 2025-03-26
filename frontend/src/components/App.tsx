@@ -5,7 +5,9 @@ import ChatInput from './ChatInput';
 import { ApiCalls } from '../utils/apiCalls';
 
 const App: React.FC = () => {
-  const [allProperties, setAllProperties] = useState<any[]>([]);
+  const [allFeatures, setAllFeatures] = useState<Record<string, any> | null>(
+    null,
+  );
   const [message, setMessage] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [ids, setIds] = useState<number[]>([]);
@@ -13,6 +15,8 @@ const App: React.FC = () => {
   const [geoJsonData, setGeoJsonData] = useState<Record<string, any> | null>(
     null,
   );
+
+  const layerNames = ['parks', 'fountains', 'cycle_paths'];
 
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,15 +27,20 @@ const App: React.FC = () => {
     try {
       const data = await ApiCalls.fetchLLMQueryProperties(message);
       setIds(data.ids);
+      const layer = data.primary_layer;
 
-      const filteredFeatures = allProperties.filter((feature: any) =>
-        data.ids.includes(feature.properties.id),
-      );
+      const filteredFeatures =
+        allFeatures?.[layer]?.features?.filter((feature: any) =>
+          data.ids.includes(feature.properties.id),
+        ) || [];
 
-      setGeoJsonData({
-        type: 'FeatureCollection',
-        features: filteredFeatures,
-      });
+      setGeoJsonData((previousGeoJsonData) => ({
+        ...previousGeoJsonData,
+        [layer]: {
+          type: 'FeatureCollection',
+          features: filteredFeatures,
+        },
+      }));
       setSubmittedQuery(message);
       console.log('Server response:', data);
     } catch (error) {
@@ -53,7 +62,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const fetchGeoJsonData = async () => {
-      const layerNames = ['parks', 'fountains']; // Define the layers you want to fetch
       const geoJsonData: Record<string, any> = {}; // Initialize an empty object to store GeoJSON data
 
       try {
@@ -63,7 +71,8 @@ const App: React.FC = () => {
           geoJsonData[layerName] = data; // Add the fetched data to the geoJsonData object
         }
 
-        setGeoJsonData(geoJsonData); // Update the state with the structured GeoJSON data
+        setGeoJsonData(geoJsonData);
+        setAllFeatures(geoJsonData);
       } catch (error) {
         console.error('Error fetching GeoJSON data:', error);
       }

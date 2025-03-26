@@ -85,7 +85,7 @@ def get_properties_prompt(nl_query):
     """
     return prompt
 
-def get_parks_prompt(nl_query):
+def get_prompt(nl_query):
     """Return the prompt for the parks and fountains tables."""
     prompt = f"""
     Convert the following natural language query into a valid SQL statement for a PostGIS database.
@@ -108,17 +108,42 @@ def get_parks_prompt(nl_query):
        - `note` (TEXT, NULL)
        - `geom` (GEOMETRY, NULL)
 
+    3. `layers.cycle_paths`:
+       - `id` (INT4, NOT NULL)
+       - `osm_id` (TEXT, NULL)
+       - `name` (TEXT, NULL)
+       - `cycleway` (TEXT, NULL)
+       - `highway` (TEXT, NULL)
+       - `surface` (TEXT, NULL)
+       - `geom` (GEOMETRY, NULL)
+
     ### Query Requirements
     - Ensure **all string comparisons are case-insensitive**.
     - If the query involves spatial relationships (e.g., "inside," "within," "near"), use appropriate PostGIS functions like `ST_Within` or `ST_Intersects`.
     - If spatial transformations are required (i.e., geometries are in different SRIDs), use `ST_Transform(geometry, target_srid)` and specify the SRID explicitly (e.g., 4326 for WGS 84).
+    - If the query involves checking for null values, use `IS NOT NULL` or `IS NULL` as appropriate.
+    - Ensure **all string comparisons are case-insensitive**.
+    - If the query involves spatial relationships (e.g., "inside," "within," "near"), use appropriate PostGIS functions like `ST_Within` or `ST_Intersects`.
+    - Use `JOIN` instead of subqueries when checking spatial relationships to avoid errors with multiple rows.
+    - Do not treat the string `'null'` as a literal value unless explicitly stated in the query.
     - If all geometries are already in the same SRID, do not use `ST_Transform`.
     - If the query has the words empty or null, check for null values and empty strings in the column.
     - Always include the `id` column in the SELECT statement.
+    - If the query is a general request for all rows in a table (e.g., "show me all parks"), return all rows without additional filtering.
+    - Include a comment in the SQL query specifying the primary layer to filter on. For example:
+      ```sql
+      -- primary_layer: fountains
+      ```
 
     ### Example Queries
+    - Show all parks:
+      ```sql
+      -- primary_layer: parks
+      SELECT * FROM layers.parks;
+      ```
     - Find all fountains inside parks (if geometries are in the same SRID): 
       ```sql
+      -- primary_layer: fountains
       SELECT fountains.id
       FROM layers.fountains
       JOIN layers.parks
@@ -126,6 +151,7 @@ def get_parks_prompt(nl_query):
       ```
     - Find all fountains inside parks (if geometries are in different SRIDs): 
       ```sql
+      -- primary_layer: fountains
       SELECT fountains.id
       FROM layers.fountains
       JOIN layers.parks
@@ -133,6 +159,14 @@ def get_parks_prompt(nl_query):
           ST_Transform(fountains.geom, 4326),
           ST_Transform(parks.geom, 4326)
       );
+      ```
+
+    - Find all cycle paths that intersect parks:
+      ```sql
+      SELECT DISTINCT cycle_paths.id
+      FROM layers.cycle_paths
+      JOIN layers.parks
+      ON ST_Intersects(cycle_paths.geom, parks.geom);
       ```
 
     ### Input
@@ -147,7 +181,7 @@ def get_parks_prompt(nl_query):
 
 def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
-    prompt = get_parks_prompt(nl_query)
+    prompt = get_prompt(nl_query)
     ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
     response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
     
@@ -157,21 +191,26 @@ def natural_language_to_sql(nl_query):
             sql_query = match.group(0).strip()
             sql_query = sql_query.replace('\\n', ' ').replace('\\u003e', '>').replace('\\u003c', '<')
             print('the response is:', sql_query)
+            
+            # Extract the primary layer from the SQL comment
+            primary_layer_match = re.search(r"-- primary_layer: (\w+)", response.text)
+            primary_layer = primary_layer_match.group(1) if primary_layer_match else None
+            
             if "id" not in sql_query.lower():
                 sql_query = sql_query.replace("SELECT", "SELECT id, ", 1)
             sql_query = f"SELECT id FROM ({sql_query[:-1]}) AS subquery;"
-            return sql_query
+            return sql_query, primary_layer
         else:
-            return "ERROR: SQL query not found in the response."
+            return "ERROR: SQL query not found in the response.", None
     else:
-        return "ERROR: Failed to get a valid response from the API."
+        return "ERROR: Failed to get a valid response from the API.", None
 
 @app.get("/query")
 def query_map(nl_query: str = Query(..., description="Natural language query")):
-    sql_query = natural_language_to_sql(nl_query)
+    sql_query, primary_layer = natural_language_to_sql(nl_query)
     print('-----------------------------------------------------------------------')
     ids = query_postgis(sql_query)
-    return JSONResponse(content={"ids": ids})
+    return JSONResponse(content={"ids": ids, "primary_layer": primary_layer})
 
 @app.get("/get-layer-popup-properties")
 def get_park_popup_properties(layer: str, park_id: int):

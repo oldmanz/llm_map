@@ -67,6 +67,22 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
     });
   };
 
+  // Function to add a line layer
+  const addLineLayer = (layerId: string) => {
+    if (!mapRef.current) return;
+
+    mapRef.current.addLayer({
+      id: layerId,
+      type: 'line',
+      source: layerId,
+      paint: {
+        'line-color': '#eb09eb', // Green color for the line
+        'line-width': 3, // Line width
+        'line-opacity': 0.8, // Line opacity
+      },
+    });
+  };
+
   // Function to add a source and layer dynamically
   const addSourceAndLayer = (layerId: string, data: any) => {
     if (!mapRef.current) return;
@@ -92,6 +108,11 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
         geometryType === 'MultiPolygon'
       ) {
         addPolygonLayer(layerId); // Add a polygon layer
+      } else if (
+        geometryType === 'LineString' ||
+        geometryType === 'MultiLineString'
+      ) {
+        addLineLayer(layerId); // Add a line layer
       } else {
         console.warn(`Unsupported geometry type: ${geometryType}`);
       }
