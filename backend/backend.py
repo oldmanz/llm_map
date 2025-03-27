@@ -10,6 +10,7 @@ import re
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+model = "deepseek-coder-v2:16b"
 
 # Allow CORS for your frontend
 app.add_middleware(
@@ -86,7 +87,7 @@ def get_properties_prompt(nl_query):
     return prompt
 
 def get_prompt(nl_query):
-    """Return the prompt for the parks and fountains tables."""
+    """Return the prompt for the parks, fountains, and cycle_path tables."""
     prompt = f"""
     Convert the following natural language query into a valid SQL statement for a PostGIS database.
     
@@ -123,6 +124,7 @@ def get_prompt(nl_query):
     - If spatial transformations are required (i.e., geometries are in different SRIDs), use `ST_Transform(geometry, target_srid)` and specify the SRID explicitly (e.g., 4326 for WGS 84).
     - If the query involves checking for null values, use `IS NOT NULL` or `IS NULL` as appropriate.
     - Ensure **all string comparisons are case-insensitive**.
+    - Always qualify the `id` column with the table name (e.g., `fountains.id` or `parks.id`).
     - If the query involves spatial relationships (e.g., "inside," "within," "near"), use appropriate PostGIS functions like `ST_Within` or `ST_Intersects`.
     - Use `JOIN` instead of subqueries when checking spatial relationships to avoid errors with multiple rows.
     - Do not treat the string `'null'` as a literal value unless explicitly stated in the query.
@@ -139,7 +141,7 @@ def get_prompt(nl_query):
     - Show all parks:
       ```sql
       -- primary_layer: parks
-      SELECT * FROM layers.parks;
+      SELECT id FROM layers.parks;
       ```
     - Find all fountains inside parks (if geometries are in the same SRID): 
       ```sql
@@ -149,15 +151,15 @@ def get_prompt(nl_query):
       JOIN layers.parks
       ON ST_Within(fountains.geom, parks.geom);
       ```
-    - Find all fountains inside parks (if geometries are in different SRIDs): 
+    - Find all fountains inside parks: 
       ```sql
       -- primary_layer: fountains
       SELECT fountains.id
       FROM layers.fountains
       JOIN layers.parks
       ON ST_Within(
-          ST_Transform(fountains.geom, 4326),
-          ST_Transform(parks.geom, 4326)
+          fountains.geom,
+          parks.geom
       );
       ```
 
@@ -167,6 +169,17 @@ def get_prompt(nl_query):
       FROM layers.cycle_paths
       JOIN layers.parks
       ON ST_Intersects(cycle_paths.geom, parks.geom);
+
+    - Find all fountains inside parks with a specific name:
+      ```sql
+      SELECT fountains.id
+      FROM layers.fountains
+      JOIN layers.parks
+      ON ST_Intersects(
+          fountains.geom,
+          parks.geom
+      )
+      WHERE parks.name = 'Kensington Gardens';
       ```
 
     ### Input
@@ -183,7 +196,7 @@ def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
     prompt = get_prompt(nl_query)
     ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
-    response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
+    response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
         match = re.search(r"SELECT.*?;", response.text, re.DOTALL)
@@ -263,10 +276,10 @@ def get_layer_geojson(layer: str):
 
 @app.get("/test-ollama")
 def test_ollama():
-    print('i am testing ollama again')
+    print('This is a test prompt for {}'.format(model))
     ollama_url = "http://ollama:11434/api/generate"  # Use the service name defined in docker-compose.yml
-    prompt = "Test prompt for llama3.2"
-    response = requests.post(ollama_url, json={"model": "llama3.2", "prompt": prompt, "stream": False})
+    prompt = "tell me a short story about a boy name Sue"
+    response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
         return response.json()
