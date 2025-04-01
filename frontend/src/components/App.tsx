@@ -3,6 +3,7 @@ import '../styles/App.css';
 import Map from './Map';
 import ChatInput from './ChatInput';
 import { ApiCalls } from '../utils/apiCalls';
+import MAPTILER_API_KEY from '../config';
 
 const App: React.FC = () => {
   const [allFeatures, setAllFeatures] = useState<Record<string, any> | null>(
@@ -83,7 +84,7 @@ const App: React.FC = () => {
 
   return (
     <div className="container">
-      <h1>LLM Map</h1>
+      <img src="images/llm_map_logo.svg" alt="Logo" className="logo" />
       {loading && (
         <div className="spinner-overlay">
           <div className="spinner"></div>
@@ -93,7 +94,7 @@ const App: React.FC = () => {
         lat={51.50634440212}
         lon={-0.1259234169603}
         zoom={14}
-        apiKey="VrNApkggJ2WBH6PCzcJz"
+        apiKey={MAPTILER_API_KEY || ''}
         geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
       />
       <ChatInput
