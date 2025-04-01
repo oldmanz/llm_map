@@ -46,46 +46,6 @@ def query_postgis(sql_query):
     
     return ids
 
-def get_properties_prompt(nl_query):
-    """Return the prompt for the properties table."""
-    prompt = f"""
-    Convert the following natural language query into a valid SQL statement for a PostGIS database.
-
-    ### Database Schema
-    The SQL query should reference the `test.properties` table, which has the following columns:
-    - `id` (INT4, NOT NULL)
-    - `property_identifier` (TEXT, NULL)
-    - `phase` (TEXT, NULL)
-    - `address` (TEXT, NULL)
-    - `city` (TEXT, NULL)
-    - `county` (TEXT, NULL)
-    - `state` (TEXT, NULL) — states are written in full, all lowercase (e.g., 'california')
-    - `zip` (TEXT, NULL)
-    - `property_type` (TEXT, NULL)
-    - `property_name` (TEXT, NULL)
-    - `property_acres` (FLOAT8, NULL)
-    - `impervious_acres` (FLOAT8, NULL)
-    - `group_id` (INT4, NULL)
-    - `owner` (TEXT, NULL)
-    - `acquisition_portfolio` (TEXT, NULL)
-
-    ### Query Requirements
-    - Ensure **all string comparisons are case-insensitive**.
-    - If the query pertains to "name," search both `property_name` and `property_identifier`.
-    - Always filter results to include only rows where `group_id = 114123`.
-    - If the query has the words empty or null, check for null values and empty strings in the column.
-    - Always include the `id` column in the SELECT statement.
-
-    ### Input
-    Natural Language Query: "{nl_query}"
-
-    ### Output
-    Return only the valid SQL query.
-
-    SQL:
-    """
-    return prompt
-
 def get_prompt(nl_query):
     """Return the prompt for the parks, fountains, and cycle_path tables."""
     prompt = f"""
@@ -223,7 +183,7 @@ def query_map(nl_query: str = Query(..., description="Natural language query")):
     sql_query, primary_layer = natural_language_to_sql(nl_query)
     print('-----------------------------------------------------------------------')
     ids = query_postgis(sql_query)
-    return JSONResponse(content={"ids": ids, "primary_layer": primary_layer})
+    return JSONResponse(content={"ids": ids, "primary_layer": primary_layer, "sql_query": sql_query})
 
 @app.get("/get-layer-popup-properties")
 def get_park_popup_properties(layer: str, park_id: int):

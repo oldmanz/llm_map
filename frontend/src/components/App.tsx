@@ -11,6 +11,7 @@ const App: React.FC = () => {
   );
   const [message, setMessage] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
+  const [sqlQuery, setSqlQuery] = useState('');
   const [ids, setIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [geoJsonData, setGeoJsonData] = useState<Record<string, any> | null>(
@@ -26,8 +27,10 @@ const App: React.FC = () => {
     setLoading(true);
 
     try {
-      const data = await ApiCalls.fetchLLMQueryProperties(message);
+      const data = await ApiCalls.fetchNLQueryIds(message);
       setIds(data.ids);
+      setSqlQuery(data.sql_query);
+      console.log('SQL Query:', data.sql_query);
       const layer = data.primary_layer;
 
       const filteredFeatures =
@@ -59,6 +62,13 @@ const App: React.FC = () => {
 
   const handleSaveQuery = () => {
     console.log('Save query');
+    ApiCalls.saveQuery(submittedQuery, sqlQuery)
+      .then((response) => {
+        console.log('Query saved successfully:', response);
+      })
+      .catch((error) => {
+        console.error('Error saving query:', error);
+      });
   };
 
   useEffect(() => {
