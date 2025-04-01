@@ -31,26 +31,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
           Send
         </button>
       </form>
-      <div>
-        <h2>Query:</h2>
-        <p
-          style={{
-            whiteSpace: 'pre-wrap',
-            backgroundColor: 'lightgray',
-            padding: '8px',
-          }}
-        >
-          {submittedQuery}
-        </p>
-        <button style={{ padding: '8px 16px' }} onClick={onSaveQuery}>
-          Save Query
-        </button>
-      </div>
-      <ul>
-        {ids.map((id, index) => (
-          <li key={index}>{id}</li>
-        ))}
-      </ul>
+      {submittedQuery && (
+        <div>
+          <div id="query-container">
+            <h3>Query:</h3>
+            <div>{submittedQuery}</div>
+            <button style={{ padding: '8px 16px' }} onClick={onSaveQuery}>
+              Save Query
+            </button>
+          </div>
+          <div id="count-container">
+            <h3>Count:</h3>
+            <div>{ids.length}</div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
