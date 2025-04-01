@@ -14,9 +14,10 @@ DB_CONFIG = {
 # Path to the GeoJSON files
 GEOJSON_FOLDER = '/docker-entrypoint-initdb.d/central_london_geodata'
 
-def create_schema(cur):
+def create_schemas(cur):
     # Create the schema if it does not exist
     cur.execute("CREATE SCHEMA IF NOT EXISTS layers;")
+    cur.execute("CREATE SCHEMA IF NOT EXISTS main;")
 
 def create_table(cur, table_name, properties):
     columns = ['id SERIAL PRIMARY KEY']
@@ -43,13 +44,27 @@ def gather_unique_properties(geojson_data):
                 unique_properties[key] = value
     return unique_properties
 
+def created_saved_queries_table(cur):
+
+    # Create the saved queries table
+    create_table_sql = '''
+        CREATE TABLE main.saved_queries (
+            id SERIAL PRIMARY KEY, -- Auto-incrementing primary key
+            nl_query TEXT NOT NULL, -- Natural language query
+            sql_query TEXT NOT NULL -- Corresponding SQL query
+        );
+    '''
+    cur.execute(create_table_sql)
+
 def seed_database():
     # Connect to the database
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
     # Create the schema
-    create_schema(cur)
+    create_schemas(cur)
+
+    created_saved_queries_table(cur)
 
     # Iterate over GeoJSON files in the folder
     for filename in os.listdir(GEOJSON_FOLDER):
@@ -72,6 +87,8 @@ def seed_database():
                     values = ', '.join([f'%s' for _ in properties.values()])
                     insert_sql = f'INSERT INTO layers."{table_name}" ({columns}, geom) VALUES ({values}, ST_GeomFromGeoJSON(%s));'
                     cur.execute(insert_sql, list(properties.values()) + [geom])
+
+    
 
     # Commit the transaction and close the connection
     conn.commit()
