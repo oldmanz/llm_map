@@ -245,3 +245,53 @@ def test_ollama():
         return response.json()
     else:
         raise HTTPException(status_code=response.status_code, detail="Failed to connect to Ollama service")
+    
+@app.post("/save-query")
+def save_query(nl_query: str, sql_query: str):
+    """Save the natural language and SQL queries to the database."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    # Insert the queries into the saved_queries table
+    insert_sql = "INSERT INTO main.saved_queries (nl_query, sql_query) VALUES (%s, %s)"
+    cur.execute(insert_sql, (nl_query, sql_query))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return JSONResponse(content={"message": "Query saved successfully."})
+
+@app.delete("/delete-saved-query")
+def delete_saved_query(query_id: int):
+    """Delete a saved query from the database."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    # Delete the query from the saved_queries table
+    delete_sql = "DELETE FROM main.saved_queries WHERE id = %s"
+    cur.execute(delete_sql, (query_id,))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return JSONResponse(content={"message": "Query deleted successfully."})
+
+@app.get("/get-saved-queries")
+def get_saved_queries():
+    """Retrieve all saved queries from the database."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    # Fetch all saved queries
+    cur.execute("SELECT nl_query, sql_query FROM main.saved_queries")
+    rows = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+
+    # Convert rows to a list of dictionaries
+    saved_queries = [{"nl_query": row[0], "sql_query": row[1]} for row in rows]
+    
+    return JSONResponse(content=saved_queries)

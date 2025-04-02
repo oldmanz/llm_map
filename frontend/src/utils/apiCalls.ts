@@ -35,6 +35,12 @@ export class ApiCalls {
   static async saveQuery(nlQuery: string, sqlQuery: string) {
     const response = await fetch(
       `http://127.0.0.1:8001/save-query?nl_query=${nlQuery}&sql_query=${sqlQuery}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
     );
     return await response.json();
   }
