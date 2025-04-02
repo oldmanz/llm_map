@@ -2,7 +2,7 @@ import React, { ChangeEvent, FormEvent } from 'react';
 
 interface ChatInputProps {
   message: string;
-  onMessageChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onMessageChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onSaveQuery: () => void;
   onSend: (event: FormEvent<HTMLFormElement>) => void;
   ids: Array<number>;
@@ -20,12 +20,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <>
       <form onSubmit={onSend} style={{ display: 'flex', gap: '8px' }}>
-        <input
-          type="text"
+        <textarea
           value={message}
           onChange={onMessageChange}
           placeholder="Type your message..."
-          style={{ flex: 1, padding: '8px' }}
+          style={{
+            flex: 1,
+            padding: '8px',
+            minHeight: '100px', // Set an initial height
+            resize: 'both', // Allow resizing both horizontally and vertically
+          }}
         />
         <button type="submit" style={{ padding: '8px 16px' }}>
           Send

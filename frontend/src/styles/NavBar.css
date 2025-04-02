@@ -1,0 +1,54 @@
+nav {
+  display: flex;
+  flex-direction: row; /* Arrange items horizontally */
+  justify-content: space-between; /* Space out items (e.g., logo and links) */
+  align-items: center; /* Center items vertically */
+  padding: 10px 20px; /* Add padding inside the navbar */
+  background-color: #f8f9fa; /* Light gray background */
+  height: 60px; /* Fixed height for the navbar */
+  width: 100%; /* Make the navbar span the full width of the page */
+  position: fixed; /* Fix the navbar to the top of the page */
+  top: 0;
+  left: 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for separation */
+  z-index: 1000; /* Ensure the navbar is above other content */
+}
+
+/* Logo styles */
+nav .logo {
+  height: 40px; /* Adjust the logo size */
+}
+
+/* Navigation list styles */
+nav ul {
+  list-style: none;
+  display: flex; /* Arrange navigation links horizontally */
+  gap: 20px; /* Add space between links */
+  margin: 0;
+  padding: 0;
+}
+
+/* Individual list item styles */
+nav ul li {
+  display: inline-block;
+}
+
+/* Link styles */
+nav ul li a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  padding: 10px 15px; /* Add padding for clickable area */
+  border-radius: 5px; /* Optional: Rounded corners */
+  transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+/* Hover and active states */
+nav ul li a:hover {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+nav ul li a:active {
+  background-color: #0056b3;
+}

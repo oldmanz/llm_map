@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/App.css';
 import Map from './Map';
+import NavBar from './NavBar';
 import ChatInput from './ChatInput';
 import { ApiCalls } from '../utils/apiCalls';
 import MAPTILER_API_KEY from '../config';
@@ -56,7 +57,7 @@ const App: React.FC = () => {
     setMessage('');
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
   };
 
@@ -93,28 +94,39 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="container">
-      <img src="images/llm_map_logo.svg" alt="Logo" className="logo" />
-      {loading && (
-        <div className="spinner-overlay">
-          <div className="spinner"></div>
+    <div>
+      <header>
+        <NavBar />
+      </header>
+
+      <main>
+        <div className="container">
+          <div className="column left">
+            <ChatInput
+              message={message}
+              onMessageChange={handleInputChange}
+              onSend={handleChatSubmit}
+              ids={ids}
+              submittedQuery={submittedQuery}
+              onSaveQuery={handleSaveQuery}
+            />
+          </div>
+          <div className="column right">
+            {loading && (
+              <div className="spinner-overlay">
+                <div className="spinner"></div>
+              </div>
+            )}
+            <Map
+              lat={51.50634440212}
+              lon={-0.1259234169603}
+              zoom={14}
+              apiKey={MAPTILER_API_KEY || ''}
+              geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
+            />
+          </div>
         </div>
-      )}
-      <Map
-        lat={51.50634440212}
-        lon={-0.1259234169603}
-        zoom={14}
-        apiKey={MAPTILER_API_KEY || ''}
-        geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
-      />
-      <ChatInput
-        message={message}
-        onMessageChange={handleInputChange}
-        onSend={handleChatSubmit}
-        ids={ids}
-        submittedQuery={submittedQuery}
-        onSaveQuery={handleSaveQuery}
-      />
+      </main>
     </div>
   );
 };

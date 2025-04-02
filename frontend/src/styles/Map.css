@@ -1,7 +1,8 @@
 .map-container {
+  height: calc(
+    100vh - 150px
+  ); /* Subtract the header height (e.g., 60px) from the viewport height */
   width: 100%;
-  height: 500px;
-  margin-top: 20px;
 }
 
 .maplibregl-popup {
