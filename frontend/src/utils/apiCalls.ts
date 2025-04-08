@@ -32,9 +32,13 @@ export class ApiCalls {
     return await response.json();
   }
 
-  static async saveQuery(nlQuery: string, sqlQuery: string) {
+  static async saveQuery(
+    nlQuery: string,
+    sqlQuery: string,
+    primaryLayer: string,
+  ) {
     const response = await fetch(
-      `http://127.0.0.1:8001/save-query?nl_query=${nlQuery}&sql_query=${sqlQuery}`,
+      `http://127.0.0.1:8001/save-query?nl_query=${encodeURIComponent(nlQuery)}&sql_query=${encodeURIComponent(sqlQuery)}&primary_layer=${encodeURIComponent(primaryLayer)}`,
       {
         method: 'POST',
         headers: {
@@ -43,5 +47,37 @@ export class ApiCalls {
       },
     );
     return await response.json();
+  }
+
+  static async getSavedQueries(): Promise<
+    Array<{ id: number; nl_query: string; timestamp: string }>
+  > {
+    const response = await fetch('http://127.0.0.1:8001/get-saved-queries');
+    if (!response.ok) {
+      throw new Error('Failed to fetch saved queries');
+    }
+    return response.json();
+  }
+
+  static async deleteSavedQuery(id: number): Promise<void> {
+    const response = await fetch(
+      `http://127.0.0.1:8001/delete-saved-query/${id}`,
+      {
+        method: 'DELETE',
+      },
+    );
+    if (!response.ok) {
+      throw new Error('Failed to delete saved query');
+    }
+  }
+
+  static async loadSavedQuery(id: number) {
+    const response = await fetch(
+      `http://127.0.0.1:8001/load-saved-query/${id}`,
+    );
+    if (!response.ok) {
+      throw new Error('Failed to load saved query');
+    }
+    return response.json();
   }
 }

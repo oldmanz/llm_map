@@ -45,13 +45,16 @@ def gather_unique_properties(geojson_data):
     return unique_properties
 
 def created_saved_queries_table(cur):
-
-    # Create the saved queries table
+    # Drop the existing table if it exists
+    cur.execute("DROP TABLE IF EXISTS main.saved_queries;")
+    
+    # Create the saved queries table with the new schema
     create_table_sql = '''
         CREATE TABLE main.saved_queries (
             id SERIAL PRIMARY KEY, -- Auto-incrementing primary key
             nl_query TEXT NOT NULL, -- Natural language query
-            sql_query TEXT NOT NULL -- Corresponding SQL query
+            sql_query TEXT NOT NULL, -- Corresponding SQL query
+            primary_layer TEXT NOT NULL -- Primary layer for the query
         );
     '''
     cur.execute(create_table_sql)

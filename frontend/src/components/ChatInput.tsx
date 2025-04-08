@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent } from 'react';
+import React, { ChangeEvent, FormEvent, KeyboardEvent } from 'react';
 
 interface ChatInputProps {
   message: string;
@@ -17,12 +17,23 @@ const ChatInput: React.FC<ChatInputProps> = ({
   submittedQuery,
   onSaveQuery,
 }) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const formEvent = {
+        preventDefault: () => {},
+      } as FormEvent<HTMLFormElement>;
+      onSend(formEvent);
+    }
+  };
+
   return (
     <>
       <form onSubmit={onSend} style={{ display: 'flex', gap: '8px' }}>
         <textarea
           value={message}
           onChange={onMessageChange}
+          onKeyDown={handleKeyDown}
           placeholder="Type your message..."
           style={{
             flex: 1,

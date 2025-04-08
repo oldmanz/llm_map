@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import '../styles/App.css';
 import Map from './Map';
 import NavBar from './NavBar';
-import ChatInput from './ChatInput';
+// import ChatInput from './ChatInput';
+import SidePanel from './SidePanel';
 import { ApiCalls } from '../utils/apiCalls';
 import MAPTILER_API_KEY from '../config';
 
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [sqlQuery, setSqlQuery] = useState('');
   const [ids, setIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [primaryLayer, setPrimaryLayer] = useState<string>('');
   const [geoJsonData, setGeoJsonData] = useState<Record<string, any> | null>(
     null,
   );
@@ -31,6 +33,7 @@ const App: React.FC = () => {
       const data = await ApiCalls.fetchNLQueryIds(message);
       setIds(data.ids);
       setSqlQuery(data.sql_query);
+      setPrimaryLayer(data.primary_layer);
       console.log('SQL Query:', data.sql_query);
       const layer = data.primary_layer;
 
@@ -63,13 +66,32 @@ const App: React.FC = () => {
 
   const handleSaveQuery = () => {
     console.log('Save query');
-    ApiCalls.saveQuery(submittedQuery, sqlQuery)
+    ApiCalls.saveQuery(submittedQuery, sqlQuery, primaryLayer)
       .then((response) => {
         console.log('Query saved successfully:', response);
       })
       .catch((error) => {
         console.error('Error saving query:', error);
       });
+  };
+
+  const handleLoadQuery = (loadedIds: number[], loadedPrimaryLayer: string) => {
+    setIds(loadedIds);
+    setPrimaryLayer(loadedPrimaryLayer);
+
+    // Update the map with the loaded query results
+    const filteredFeatures =
+      allFeatures?.[loadedPrimaryLayer]?.features?.filter((feature: any) =>
+        loadedIds.includes(feature.properties.id),
+      ) || [];
+
+    setGeoJsonData((previousGeoJsonData) => ({
+      ...previousGeoJsonData,
+      [loadedPrimaryLayer]: {
+        type: 'FeatureCollection',
+        features: filteredFeatures,
+      },
+    }));
   };
 
   useEffect(() => {
@@ -102,13 +124,14 @@ const App: React.FC = () => {
       <main>
         <div className="container">
           <div className="column left">
-            <ChatInput
+            <SidePanel
               message={message}
               onMessageChange={handleInputChange}
               onSend={handleChatSubmit}
               ids={ids}
               submittedQuery={submittedQuery}
               onSaveQuery={handleSaveQuery}
+              onLoadQuery={handleLoadQuery}
             />
           </div>
           <div className="column right">

@@ -247,14 +247,14 @@ def test_ollama():
         raise HTTPException(status_code=response.status_code, detail="Failed to connect to Ollama service")
     
 @app.post("/save-query")
-def save_query(nl_query: str, sql_query: str):
+def save_query(nl_query: str, sql_query: str, primary_layer: str):
     """Save the natural language and SQL queries to the database."""
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
     # Insert the queries into the saved_queries table
-    insert_sql = "INSERT INTO main.saved_queries (nl_query, sql_query) VALUES (%s, %s)"
-    cur.execute(insert_sql, (nl_query, sql_query))
+    insert_sql = "INSERT INTO main.saved_queries (nl_query, sql_query, primary_layer) VALUES (%s, %s, %s)"
+    cur.execute(insert_sql, (nl_query, sql_query, primary_layer))
     
     conn.commit()
     cur.close()
@@ -262,21 +262,25 @@ def save_query(nl_query: str, sql_query: str):
     
     return JSONResponse(content={"message": "Query saved successfully."})
 
-@app.delete("/delete-saved-query")
+@app.delete("/delete-saved-query/{query_id}")
 def delete_saved_query(query_id: int):
     """Delete a saved query from the database."""
     conn = psycopg2.connect(**DB_CONFIG)
     cur = conn.cursor()
 
-    # Delete the query from the saved_queries table
-    delete_sql = "DELETE FROM main.saved_queries WHERE id = %s"
-    cur.execute(delete_sql, (query_id,))
-    
-    conn.commit()
-    cur.close()
-    conn.close()
-    
-    return JSONResponse(content={"message": "Query deleted successfully."})
+    try:
+        # Delete the query from the saved_queries table
+        delete_sql = "DELETE FROM main.saved_queries WHERE id = %s"
+        cur.execute(delete_sql, (query_id,))
+        
+        conn.commit()
+        return JSONResponse(content={"message": "Query deleted successfully."})
+    except Exception as e:
+        print(f"Error deleting query: {e}")
+        return JSONResponse(content={"error": "Failed to delete query"}, status_code=500)
+    finally:
+        cur.close()
+        conn.close()
 
 @app.get("/get-saved-queries")
 def get_saved_queries():
@@ -285,13 +289,45 @@ def get_saved_queries():
     cur = conn.cursor()
 
     # Fetch all saved queries
-    cur.execute("SELECT nl_query, sql_query FROM main.saved_queries")
+    cur.execute("SELECT id, nl_query FROM main.saved_queries")
     rows = cur.fetchall()
     
     cur.close()
     conn.close()
 
     # Convert rows to a list of dictionaries
-    saved_queries = [{"nl_query": row[0], "sql_query": row[1]} for row in rows]
+    saved_queries = [{"id": row[0], "nl_query": row[1]} for row in rows]
     
     return JSONResponse(content=saved_queries)
+
+@app.get("/load-saved-query/{query_id}")
+def load_saved_query(query_id: int):
+    """Load and execute a saved query from the database."""
+    conn = psycopg2.connect(**DB_CONFIG)
+    cur = conn.cursor()
+
+    try:
+        # Get the saved query from the database
+        cur.execute("SELECT sql_query, primary_layer FROM main.saved_queries WHERE id = %s", (query_id,))
+        result = cur.fetchone()
+        
+        if not result:
+            return JSONResponse(content={"error": "Query not found"}, status_code=404)
+        
+        sql_query, primary_layer = result
+        
+        # Execute the query using query_postgis
+        ids = query_postgis(sql_query)
+        
+        return JSONResponse(content={
+            "ids": ids,
+            "primary_layer": primary_layer,
+            "sql_query": sql_query
+        })
+        
+    except Exception as e:
+        print(f"Error loading saved query: {e}")
+        return JSONResponse(content={"error": "Failed to load query"}, status_code=500)
+    finally:
+        cur.close()
+        conn.close()
