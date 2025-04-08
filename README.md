@@ -6,6 +6,10 @@
 
 Contributions are welcome — whether you're refining the UX, improving prompts, or adding new capabilities!
 
+<img src="frontend/public/images/screen_grab.png" alt="Logo" height="400" style="display: block;
+        margin-left: auto;
+        margin-right: auto;">
+
 ---
 
 To run the project locally:
@@ -27,6 +31,7 @@ To run the project locally:
 3. **Start the project using Docker:**
 
    ```bash
+   docker compose build
    docker compose up
    ```
 
