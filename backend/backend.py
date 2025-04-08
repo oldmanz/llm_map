@@ -92,6 +92,9 @@ def get_prompt(nl_query):
     - If the query has the words empty or null, check for null values and empty strings in the column.
     - Always include the `id` column in the SELECT statement.
     - If the query is a general request for all rows in a table (e.g., "show me all parks"), return all rows without additional filtering.
+    - ALWAYS use fully qualified table names (e.g., `layers.fountains`, `layers.parks`, `layers.cycle_paths`)
+    - ALWAYS use table aliases in JOINs and WHERE clauses (e.g., `FROM layers.fountains AS f`)
+    - ALWAYS qualify column names with table aliases (e.g., `f.id`, `p.name`)
     - Include a comment in the SQL query specifying the primary layer to filter on. For example:
       ```sql
       -- primary_layer: fountains
