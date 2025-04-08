@@ -1,0 +1,46 @@
+.layer-item {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--layer-item-background, transparent);
+}
+
+.layer-item__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-item__checkbox {
+  cursor: pointer;
+}
+
+.layer-item__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.layer-item__name {
+  font-weight: bold;
+}
+
+.layer-item__status {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.layer-item__clear-button {
+  padding: 4px 8px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.layer-item__clear-button:hover {
+  background-color: #e9ecef;
+}

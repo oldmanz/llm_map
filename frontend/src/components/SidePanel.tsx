@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import ChatInput from './ChatInput';
 import SavedQueries from './SavedQueries';
+import Layers from './Layers';
 import { ApiCalls } from '../utils/apiCalls';
 
 interface SavedQuery {
   id: number;
   nl_query: string;
   timestamp: string;
+}
+
+interface Layer {
+  name: string;
+  isActive: boolean;
+  hasFilter: boolean;
+  featureCount: number;
 }
 
 interface SidePanelProps {
@@ -17,6 +25,9 @@ interface SidePanelProps {
   submittedQuery: string;
   onSaveQuery: () => void;
   onLoadQuery: (ids: number[], primaryLayer: string) => void;
+  layers: Layer[];
+  onToggleLayer: (layerName: string) => void;
+  onClearFilter: (layerName: string) => void;
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({
@@ -27,8 +38,13 @@ const SidePanel: React.FC<SidePanelProps> = ({
   submittedQuery,
   onSaveQuery,
   onLoadQuery,
+  layers,
+  onToggleLayer,
+  onClearFilter,
 }) => {
-  const [activeTab, setActiveTab] = useState<'search' | 'saved'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'saved' | 'layers'>(
+    'search',
+  );
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -109,6 +125,18 @@ const SidePanel: React.FC<SidePanelProps> = ({
         >
           Saved Queries
         </button>
+        <button
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: activeTab === 'layers' ? '#f0f0f0' : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+          onClick={() => setActiveTab('layers')}
+        >
+          Layers
+        </button>
       </div>
 
       <div style={{ padding: '16px' }}>
@@ -121,11 +149,17 @@ const SidePanel: React.FC<SidePanelProps> = ({
             submittedQuery={submittedQuery}
             onSaveQuery={onSaveQuery}
           />
-        ) : (
+        ) : activeTab === 'saved' ? (
           <SavedQueries
             savedQueries={savedQueries}
             onLoadQuery={handleLoadQuery}
             onDeleteQuery={handleDeleteQuery}
+          />
+        ) : (
+          <Layers
+            layers={layers}
+            onToggleLayer={onToggleLayer}
+            onClearFilter={onClearFilter}
           />
         )}
       </div>

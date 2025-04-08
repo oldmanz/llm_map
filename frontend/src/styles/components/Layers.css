@@ -1,0 +1,15 @@
+.layers {
+  padding: 16px;
+}
+
+.layers__title {
+  margin-bottom: 16px;
+  font-size: 1.5em;
+  color: #333;
+}
+
+.layers__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

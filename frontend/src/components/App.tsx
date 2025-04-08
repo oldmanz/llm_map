@@ -20,8 +20,43 @@ const App: React.FC = () => {
   const [geoJsonData, setGeoJsonData] = useState<Record<string, any> | null>(
     null,
   );
+  const [activeLayers, setActiveLayers] = useState<Record<string, boolean>>({
+    parks: true,
+    fountains: true,
+    cycle_paths: true,
+  });
 
   const layerNames = ['parks', 'fountains', 'cycle_paths'];
+
+  const handleToggleLayer = (layerName: string) => {
+    setActiveLayers((prev) => ({
+      ...prev,
+      [layerName]: !prev[layerName],
+    }));
+  };
+
+  const handleClearFilter = (layerName: string) => {
+    setGeoJsonData((prev) => ({
+      ...prev,
+      [layerName]: allFeatures?.[layerName],
+    }));
+  };
+
+  const getLayerInfo = (): Array<{
+    name: string;
+    isActive: boolean;
+    hasFilter: boolean;
+    featureCount: number;
+  }> => {
+    return layerNames.map((name) => ({
+      name,
+      isActive: activeLayers[name],
+      hasFilter:
+        geoJsonData?.[name]?.features?.length !==
+        allFeatures?.[name]?.features?.length,
+      featureCount: geoJsonData?.[name]?.features?.length || 0,
+    }));
+  };
 
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -132,6 +167,9 @@ const App: React.FC = () => {
               submittedQuery={submittedQuery}
               onSaveQuery={handleSaveQuery}
               onLoadQuery={handleLoadQuery}
+              layers={getLayerInfo()}
+              onToggleLayer={handleToggleLayer}
+              onClearFilter={handleClearFilter}
             />
           </div>
           <div className="column right">
