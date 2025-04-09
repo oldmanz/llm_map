@@ -1,6 +1,6 @@
 import React from 'react';
 import ChatInput from '../ChatInput';
-import SavedQueries from '../SavedQueries';
+import SavedQueries from './SavedQueries';
 import Layers from '../layers/Layers';
 import { Layer } from '../../types/layer';
 

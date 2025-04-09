@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ChatInput from '../ChatInput';
-import SavedQueries from '../SavedQueries';
+import ChatInput from './ChatInput';
+import SavedQueries from './SavedQueries';
+import TabButton from './TabButton';
 import Layers from '../Layers';
 import { ApiCalls } from '../../utils/apiCalls';
 
@@ -101,42 +102,21 @@ const SidePanel: React.FC<SidePanelProps> = ({
   return (
     <div style={{ width: '400px', borderLeft: '1px solid #ddd' }}>
       <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
-        <button
-          style={{
-            flex: 1,
-            padding: '12px',
-            background: activeTab === 'search' ? '#f0f0f0' : 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+        <TabButton
+          label="Search"
+          isActive={activeTab === 'search'}
           onClick={() => setActiveTab('search')}
-        >
-          Search
-        </button>
-        <button
-          style={{
-            flex: 1,
-            padding: '12px',
-            background: activeTab === 'saved' ? '#f0f0f0' : 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+        />
+        <TabButton
+          label="Saved Queries"
+          isActive={activeTab === 'saved'}
           onClick={() => setActiveTab('saved')}
-        >
-          Saved Queries
-        </button>
-        <button
-          style={{
-            flex: 1,
-            padding: '12px',
-            background: activeTab === 'layers' ? '#f0f0f0' : 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+        />
+        <TabButton
+          label="Layers"
+          isActive={activeTab === 'layers'}
           onClick={() => setActiveTab('layers')}
-        >
-          Layers
-        </button>
+        />
       </div>
 
       <div style={{ padding: '16px' }}>
