@@ -3,7 +3,7 @@ import '../styles/App.css';
 import Map from './Map';
 import NavBar from './NavBar';
 // import ChatInput from './ChatInput';
-import SidePanel from './SidePanel';
+import SidePanel from './sidepanel/SidePanel';
 import { ApiCalls } from '../utils/apiCalls';
 import MAPTILER_API_KEY from '../config';
 

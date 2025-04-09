@@ -12,7 +12,7 @@ interface TabContentProps {
   ids: number[];
   submittedQuery: string;
   onSaveQuery: () => void;
-  onLoadQuery: (ids: number[], primaryLayer: string) => void;
+  onLoadQuery: (id: number) => void;
   layers: Layer[];
   onToggleLayer: (layerName: string) => void;
   onClearFilter: (layerName: string) => void;

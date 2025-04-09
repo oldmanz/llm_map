@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
-import TabButton from './TabButton';
-import TabContent from './TabContent';
-import { Layer } from '../../types/layer';
-import '../../styles/components/SidePanel.css';
+import React, { useState, useEffect } from 'react';
+import ChatInput from '../ChatInput';
+import SavedQueries from '../SavedQueries';
+import Layers from '../Layers';
+import { ApiCalls } from '../../utils/apiCalls';
+
+interface SavedQuery {
+  id: number;
+  nl_query: string;
+  timestamp: string;
+}
+
+interface Layer {
+  name: string;
+  isActive: boolean;
+  hasFilter: boolean;
+  featureCount: number;
+}
 
 interface SidePanelProps {
   message: string;
@@ -32,41 +45,123 @@ const SidePanel: React.FC<SidePanelProps> = ({
   const [activeTab, setActiveTab] = useState<'search' | 'saved' | 'layers'>(
     'search',
   );
+  const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchSavedQueries = async () => {
+      setLoading(true);
+      console.log('Fetching saved queries...');
+      try {
+        const queries = await ApiCalls.getSavedQueries();
+        console.log('Received queries:', queries);
+        setSavedQueries(queries);
+      } catch (error) {
+        console.error('Error fetching saved queries:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (activeTab === 'saved') {
+      fetchSavedQueries();
+    }
+  }, [activeTab]);
+
+  const handleSaveQuery = () => {
+    if (submittedQuery) {
+      const newQuery: SavedQuery = {
+        id: Date.now(),
+        nl_query: submittedQuery,
+        timestamp: new Date().toISOString(),
+      };
+      setSavedQueries([...savedQueries, newQuery]);
+    }
+  };
+
+  const handleLoadSavedQuery = async (id: number) => {
+    try {
+      const response = await ApiCalls.loadSavedQuery(id);
+      console.log('Loaded query response:', response);
+      onLoadQuery(response.ids, response.primary_layer);
+    } catch (error) {
+      console.error('Error loading query:', error);
+    }
+  };
+
+  const handleDeleteQuery = async (id: number) => {
+    try {
+      await ApiCalls.deleteSavedQuery(id);
+      setSavedQueries(savedQueries.filter((query) => query.id !== id));
+    } catch (error) {
+      console.error('Error deleting query:', error);
+    }
+  };
 
   return (
-    <div className="side-panel">
-      <div className="side-panel__tabs">
-        <TabButton
-          label="Search"
-          isActive={activeTab === 'search'}
+    <div style={{ width: '400px', borderLeft: '1px solid #ddd' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
+        <button
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: activeTab === 'search' ? '#f0f0f0' : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
           onClick={() => setActiveTab('search')}
-        />
-        <TabButton
-          label="Saved Queries"
-          isActive={activeTab === 'saved'}
+        >
+          Search
+        </button>
+        <button
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: activeTab === 'saved' ? '#f0f0f0' : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
           onClick={() => setActiveTab('saved')}
-        />
-        <TabButton
-          label="Layers"
-          isActive={activeTab === 'layers'}
+        >
+          Saved Queries
+        </button>
+        <button
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: activeTab === 'layers' ? '#f0f0f0' : 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
           onClick={() => setActiveTab('layers')}
-        />
+        >
+          Layers
+        </button>
       </div>
 
-      <div className="side-panel__content">
-        <TabContent
-          activeTab={activeTab}
-          message={message}
-          onMessageChange={onMessageChange}
-          onSend={onSend}
-          ids={ids}
-          submittedQuery={submittedQuery}
-          onSaveQuery={onSaveQuery}
-          onLoadQuery={onLoadQuery}
-          layers={layers}
-          onToggleLayer={onToggleLayer}
-          onClearFilter={onClearFilter}
-        />
+      <div style={{ padding: '16px' }}>
+        {activeTab === 'search' ? (
+          <ChatInput
+            message={message}
+            onMessageChange={onMessageChange}
+            onSend={onSend}
+            ids={ids}
+            submittedQuery={submittedQuery}
+            onSaveQuery={onSaveQuery}
+          />
+        ) : activeTab === 'saved' ? (
+          <SavedQueries
+            savedQueries={savedQueries}
+            onLoadQuery={handleLoadSavedQuery}
+            onDeleteQuery={handleDeleteQuery}
+          />
+        ) : (
+          <Layers
+            layers={layers}
+            onToggleLayer={onToggleLayer}
+            onClearFilter={onClearFilter}
+          />
+        )}
       </div>
     </div>
   );
