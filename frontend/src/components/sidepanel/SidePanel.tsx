@@ -4,7 +4,7 @@ import SavedQueries from './SavedQueries';
 import TabButton from './TabButton';
 import Layers from '../Layers';
 import { ApiCalls } from '../../utils/apiCalls';
-
+import Actions from './Actions';
 interface SavedQuery {
   id: number;
   nl_query: string;
@@ -43,7 +43,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
   onToggleLayer,
   onClearFilter,
 }) => {
-  const [activeTab, setActiveTab] = useState<'search' | 'saved' | 'layers'>(
+  const [activeTab, setActiveTab] = useState<'search' | 'saved' | 'layers' | 'actions'>(
     'search',
   );
   const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
@@ -117,6 +117,11 @@ const SidePanel: React.FC<SidePanelProps> = ({
           isActive={activeTab === 'layers'}
           onClick={() => setActiveTab('layers')}
         />
+        <TabButton
+          label="Actions"
+          isActive={activeTab === 'actions'}
+          onClick={() => setActiveTab('actions')}
+        />
       </div>
 
       <div style={{ padding: '16px' }}>
@@ -135,12 +140,14 @@ const SidePanel: React.FC<SidePanelProps> = ({
             onLoadQuery={handleLoadSavedQuery}
             onDeleteQuery={handleDeleteQuery}
           />
-        ) : (
+        ) : activeTab === 'layers' ? (
           <Layers
             layers={layers}
             onToggleLayer={onToggleLayer}
             onClearFilter={onClearFilter}
           />
+        ) : (
+          <Actions />
         )}
       </div>
     </div>
