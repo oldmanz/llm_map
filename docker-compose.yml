@@ -13,7 +13,7 @@ services:
 
   ollama:
     build: ./ollama
-    container_name: ollama_llama3
+    container_name: ollama
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
