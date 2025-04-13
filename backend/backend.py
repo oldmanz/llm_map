@@ -1,16 +1,17 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from backend_constants import LAYER_COLUMNS
 import psycopg2
 import json
 import requests
-from shapely.geometry import shape
 from geojson import Feature, FeatureCollection
 import re
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 
 app = FastAPI()
-model = "deepseek-coder-v2:16b"
+model = "llama3.2:3b" #"deepseek-coder-v2:16b"
 
 # Allow CORS for your frontend
 app.add_middleware(
@@ -46,7 +47,7 @@ def query_postgis(sql_query):
     
     return ids
 
-def get_prompt(nl_query):
+def get_sql_prompt(nl_query):
     """Return the prompt for the parks, fountains, and cycle_path tables."""
     prompt = f"""
     Convert the following natural language query into a valid SQL statement for a PostGIS database.
@@ -157,7 +158,7 @@ def get_prompt(nl_query):
 
 def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
-    prompt = get_prompt(nl_query)
+    prompt = get_sql_prompt(nl_query)
     ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
     response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
     
@@ -334,3 +335,64 @@ def load_saved_query(query_id: int):
     finally:
         cur.close()
         conn.close()
+
+class MapActionRequest(BaseModel):
+    action: str
+
+class MapActionResponse(BaseModel):
+    response: str
+    action: Optional[Dict[str, Any]] = None
+
+def get_action_prompt(action):
+    """Return the prompt for the action."""
+    prompt = f"""
+    Convert the following natural language map action into a structured JSON format.
+    
+    Available actions and their parameters:
+    1. ZOOM_IN - Zoom in one level
+    2. ZOOM_OUT - Zoom out one level
+    3. SET_ZOOM - Set specific zoom level (requires "level" parameter: number 0-20)
+    4. PAN - Move in a direction (requires "x" and "y" parameters: numbers in pixels)
+    5. FLY_TO - Animate to location (requires "lng" and "lat" parameters: numbers)
+    6. JUMP_TO - Instantly move to location (requires "lng" and "lat" parameters: numbers)
+    7. ROTATE - Rotate map view (requires "degrees" parameter: number 0-360)
+    8. PITCH - Tilt map view (requires "degrees" parameter: number 0-60)
+    9. RESET_VIEW - Reset to default view
+
+    The response must be a JSON object with:
+    - "intent": One of the action types in CAPS
+    - "parameters": Object containing required parameters for the action
+
+    Examples:
+    - "zoom in 2 levels" -> {{"intent": "ZOOM_IN", "parameters": {{"levels": 2}}}}
+    - "move left" -> {{"intent": "PAN", "parameters": {{"x": -100, "y": 0}}}}
+    - "go to London" -> {{"intent": "FLY_TO", "parameters": {{"lng": -0.1276, "lat": 51.5074}}}}
+    - "rotate 90 degrees" -> {{"intent": "ROTATE", "parameters": {{"degrees": 90}}}}
+
+    Action: {action}
+
+    Respond with only the JSON object, no other text.
+    """
+    return prompt
+
+@app.post("/api/actions")
+async def process_map_action(action: str = Query(..., description="Natural language map action")):
+
+    try:
+        prompt = get_action_prompt(action)
+        ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
+        response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
+    
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to process action with Ollama")
+
+        # Parse the response
+        response_data = response.json()
+        action_json = json.loads(response_data["response"])
+        
+        return MapActionResponse(
+            response=f"I'll help you with that: {action}",
+            action=action_json
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
