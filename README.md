@@ -31,8 +31,8 @@ To run the project locally:
 3. **Start the project using Docker:**
 
    ```bash
-   docker compose build
-   docker compose up
+   docker-compose build
+   docker-compose up
    ```
 
 4. **Seed the Database**
