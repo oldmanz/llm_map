@@ -10,9 +10,10 @@ interface MapProps {
   apiKey: string;
   geoJsonData: Record<string, any>; // A map of layer names to GeoJSON data
   actionResponse: any;
+  onActionResult: (result: { error?: string; success?: string }) => void;
 }
 
-const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionResponse }) => {
+const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionResponse, onActionResult }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -111,30 +112,49 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionRe
     });
   };
 
-  const handleHeatMapAction = (action: string, data: any) => {
-    if (!mapRef.current) return;
+  const getPointLayers = (data: Record<string, any>): string[] => {
+    return Object.entries(data)
+        .filter(([_, layerData]) => {
+            const firstFeature = layerData.features?.[0];
+            return firstFeature?.geometry?.type === 'Point';
+        })
+        .map(([name]) => name);
+  };
+
+  const handleHeatMapAction = (parameters: { action: string, layer: string }) => {
+    if (!mapRef.current) return { error: "Map not initialized" };
 
     const { current: map } = mapRef;
     const sourceExists = map.getSource('heatmap');
     const layerExists = map.getLayer('heatmap');
 
-    if (action === 'REMOVE') {
-        if (layerExists) map.removeLayer('heatmap');
-        if (sourceExists) map.removeSource('heatmap');
-        return;
+    if (!geoJsonData[parameters.layer]) {
+        const pointLayers = getPointLayers(geoJsonData);
+        return { 
+            error: `Layer "${parameters.layer}" does not exist. Available point layers: ${pointLayers.join(', ')}` 
+        };
     }
 
-    if (action !== 'ADD' && action !== 'UPDATE') return;
+    if (parameters.action === 'REMOVE') {
+        if (layerExists) map.removeLayer('heatmap');
+        if (sourceExists) map.removeSource('heatmap');
+        return { success: "Heat map removed successfully" };
+    }
+
+    if (parameters.action !== 'ADD' && parameters.action !== 'UPDATE') {
+        return { error: `Invalid action: ${parameters.action}` };
+    }
 
     if (sourceExists) {
-        (map.getSource('heatmap') as maplibregl.GeoJSONSource).setData(data);
+        (map.getSource('heatmap') as maplibregl.GeoJSONSource).setData(geoJsonData[parameters.layer]);
     } else {
         map.addSource('heatmap', {
             type: 'geojson',
-            data: data,
+            data: geoJsonData[parameters.layer],
         });
         addHeatMapLayer('heatmap');
     }
+    return { success: `Heat map ${parameters.action.toLowerCase()}ed successfully` };
   };
 
   // Function to add a source and layer dynamically
@@ -232,42 +252,57 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionRe
   // Function to handle map actions
   const handleMapAction = (response: any) => {
     if (response && response.action && mapRef.current) {
-      const { intent, parameters } = response.action;
-      switch (intent) {
-        case 'ZOOM_IN':
-          mapRef.current.zoomIn(parameters.levels || 1);
-          break;
-        case 'ZOOM_OUT':
-          mapRef.current.zoomOut(parameters.levels || 1);
-          break;
-        case 'SET_ZOOM':
-          mapRef.current.setZoom(parameters.level);
-          break;
-        case 'PAN':
-          mapRef.current.panBy([parameters.x, parameters.y]);
-          break;
-        case 'FLY_TO':
-          mapRef.current.flyTo({ center: [parameters.lng, parameters.lat] });
-          break;
-        case 'JUMP_TO':
-          mapRef.current.jumpTo({ center: [parameters.lng, parameters.lat] });
-          break;
-        case 'ROTATE':
-          mapRef.current.rotateTo(parameters.degrees);
-          break;
-        case 'PITCH':
-          mapRef.current.setPitch(parameters.degrees);
-          break;
-        case 'RESET_VIEW':
-          mapRef.current.jumpTo({ center: parameters.center, zoom: parameters.zoom });
-          break;
-        case 'HEAT_MAP':
-          handleHeatMapAction(parameters.action, geoJsonData['fountains']);
-          break;
-        default:
-          console.log('Unknown action intent:', intent);
-      }
+        const { intent, parameters } = response.action;
+        let result = {};
+
+        switch (intent) {
+            case 'ZOOM_IN':
+                mapRef.current.zoomIn(parameters.levels || 1);
+                result = { success: `Zoomed in ${parameters.levels || 1} level(s)` };
+                break;
+            case 'ZOOM_OUT':
+                mapRef.current.zoomOut(parameters.levels || 1);
+                result = { success: `Zoomed out ${parameters.levels || 1} level(s)` };
+                break;
+            case 'SET_ZOOM':
+                mapRef.current.setZoom(parameters.level);
+                result = { success: `Set zoom to level ${parameters.level}` };
+                break;
+            case 'PAN':
+                mapRef.current.panBy([parameters.x, parameters.y]);
+                result = { success: `Panned map by [${parameters.x}, ${parameters.y}]` };
+                break;
+            case 'FLY_TO':
+                mapRef.current.flyTo({ center: [parameters.lng, parameters.lat] });
+                result = { success: `Flew to [${parameters.lng}, ${parameters.lat}]` };
+                break;
+            case 'JUMP_TO':
+                mapRef.current.jumpTo({ center: [parameters.lng, parameters.lat] });
+                result = { success: `Jumped to [${parameters.lng}, ${parameters.lat}]` };
+                break;
+            case 'ROTATE':
+                mapRef.current.rotateTo(parameters.degrees);
+                result = { success: `Rotated to ${parameters.degrees} degrees` };
+                break;
+            case 'PITCH':
+                mapRef.current.setPitch(parameters.degrees);
+                result = { success: `Set pitch to ${parameters.degrees} degrees` };
+                break;
+            case 'RESET_VIEW':
+                mapRef.current.jumpTo({ center: parameters.center, zoom: parameters.zoom });
+                result = { success: 'Reset view to default' };
+                break;
+            case 'HEAT_MAP':
+                result = handleHeatMapAction(parameters);
+                break;
+            default:
+                result = { error: `Unknown action intent: ${intent}` };
+        }
+
+        // Return the result to be displayed in the message box
+        return result;
     }
+    return { error: "Invalid response format" };
   };
 
   useEffect(() => {
@@ -283,7 +318,10 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionRe
   }, [geoJsonData]);
 
   useEffect(() => {
-    handleMapAction(actionResponse);
+    if (actionResponse) {
+        const result = handleMapAction(actionResponse);
+        onActionResult(result);
+    }
   }, [actionResponse]);
 
   return <div ref={mapContainerRef} className="map-container" />;

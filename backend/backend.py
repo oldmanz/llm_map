@@ -358,7 +358,7 @@ def get_action_prompt(action):
     7. ROTATE - Rotate map view (requires "degrees" parameter: number 0-360)
     8. PITCH - Tilt map view (requires "degrees" parameter: number 0-60)
     9. RESET_VIEW - Reset to default view
-    10. HEAT_MAP - Add, update or remove the heat map layer (requires "data" parameter: GeoJSON data)
+    10. HEAT_MAP - Add, update or remove the heat map layer (requires "data" parameter: "action" and "layer" parameters: "action": "ADD" or "REMOVE", "layer": "fountains")
 
     The response must be a JSON object with:
     - "intent": One of the action types in CAPS
@@ -369,7 +369,7 @@ def get_action_prompt(action):
     - "move left" -> {{"intent": "PAN", "parameters": {{"x": -100, "y": 0}}}}
     - "go to London" -> {{"intent": "FLY_TO", "parameters": {{"lng": -0.1276, "lat": 51.5074}}}}
     - "rotate 90 degrees" -> {{"intent": "ROTATE", "parameters": {{"degrees": 90}}}}
-    - "add heat map" -> {{"intent": "HEAT_MAP", "parameters": {{"action": "ADD"}}}}
+    - "add heat map" -> {{"intent": "HEAT_MAP", "parameters": {{"action": "ADD", "layer": "fountains"}}}}
 
     Action: {action}
 

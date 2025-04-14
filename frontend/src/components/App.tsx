@@ -114,7 +114,6 @@ const App: React.FC = () => {
     setIds(loadedIds);
     setPrimaryLayer(loadedPrimaryLayer);
 
-    // Update the map with the loaded query results
     const filteredFeatures =
       allFeatures?.[loadedPrimaryLayer]?.features?.filter((feature: any) =>
         loadedIds.includes(feature.properties.id),
@@ -131,6 +130,7 @@ const App: React.FC = () => {
 
   const handleActionResponse = (response: any) => {
     setActionResponse(response);
+    return { success: "Action processed" };
   };
 
   useEffect(() => {
@@ -188,8 +188,11 @@ const App: React.FC = () => {
               lon={-0.1259234169603}
               zoom={14}
               apiKey={MAPTILER_API_KEY || ''}
-              geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
+              geoJsonData={geoJsonData || {}}
               actionResponse={actionResponse}
+              onActionResult={(result) => {
+                return result;
+              }}
             />
           </div>
         </div>

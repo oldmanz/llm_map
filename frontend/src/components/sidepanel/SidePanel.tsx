@@ -29,7 +29,7 @@ interface SidePanelProps {
   layers: Layer[];
   onToggleLayer: (layerName: string) => void;
   onClearFilter: (layerName: string) => void;
-  onActionResponse: (response: any) => void;
+  onActionResponse: (response: any) => { error?: string; success?: string };
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({
