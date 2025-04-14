@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 
 app = FastAPI()
-model = "llama3.2:3b" #"deepseek-coder-v2:16b"
+model = "deepseek-coder-v2:16b"
 
 # Allow CORS for your frontend
 app.add_middleware(
