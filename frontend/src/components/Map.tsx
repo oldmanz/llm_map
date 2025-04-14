@@ -84,6 +84,59 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionRe
     });
   };
 
+  const addHeatMapLayer = (layerId: string) => {
+    if (!mapRef.current) return;
+
+    mapRef.current.addLayer({
+      id: layerId,
+      type: 'heatmap',
+      source: layerId,
+      paint: {
+        'heatmap-weight': 1,
+        'heatmap-intensity': 1,
+        'heatmap-color': [
+          'interpolate',
+          ['linear'],
+          ['heatmap-density'],
+          0, 'rgba(0, 0, 255, 0)',
+          0.2, 'royalblue',
+          0.4, 'cyan',
+          0.6, 'lime',
+          0.8, 'yellow',
+          1, 'red'
+        ],
+        'heatmap-radius': 30,
+        'heatmap-opacity': 0.8,
+      },
+    });
+  };
+
+  const handleHeatMapAction = (action: string, data: any) => {
+    if (!mapRef.current) return;
+
+    const { current: map } = mapRef;
+    const sourceExists = map.getSource('heatmap');
+    const layerExists = map.getLayer('heatmap');
+
+    if (action === 'REMOVE') {
+        if (layerExists) map.removeLayer('heatmap');
+        if (sourceExists) map.removeSource('heatmap');
+        return;
+    }
+
+    if (action !== 'ADD' && action !== 'UPDATE') return;
+
+    if (sourceExists) {
+        (map.getSource('heatmap') as maplibregl.GeoJSONSource).setData(data);
+    } else {
+        map.addSource('heatmap', {
+            type: 'geojson',
+            data: data,
+        });
+        addHeatMapLayer('heatmap');
+    }
+  };
+
   // Function to add a source and layer dynamically
   const addSourceAndLayer = (layerId: string, data: any) => {
     if (!mapRef.current) return;
@@ -207,6 +260,9 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionRe
           break;
         case 'RESET_VIEW':
           mapRef.current.jumpTo({ center: parameters.center, zoom: parameters.zoom });
+          break;
+        case 'HEAT_MAP':
+          handleHeatMapAction(parameters.action, geoJsonData['fountains']);
           break;
         default:
           console.log('Unknown action intent:', intent);
