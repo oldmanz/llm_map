@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import '../styles/App.css';
 import Map from './Map';
 import NavBar from './NavBar';
-// import ChatInput from './ChatInput';
 import SidePanel from './sidepanel/SidePanel';
 import { ApiCalls } from '../utils/apiCalls';
 import MAPTILER_API_KEY from '../config';
@@ -25,6 +24,7 @@ const App: React.FC = () => {
     fountains: true,
     cycle_paths: true,
   });
+  const [actionResponse, setActionResponse] = useState<any>(null);
 
   const layerNames = ['parks', 'fountains', 'cycle_paths'];
 
@@ -129,6 +129,10 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleActionResponse = (response: any) => {
+    setActionResponse(response);
+  };
+
   useEffect(() => {
     const fetchGeoJsonData = async () => {
       const geoJsonData: Record<string, any> = {}; // Initialize an empty object to store GeoJSON data
@@ -170,6 +174,7 @@ const App: React.FC = () => {
               layers={getLayerInfo()}
               onToggleLayer={handleToggleLayer}
               onClearFilter={handleClearFilter}
+              onActionResponse={handleActionResponse}
             />
           </div>
           <div className="column right">
@@ -184,6 +189,7 @@ const App: React.FC = () => {
               zoom={14}
               apiKey={MAPTILER_API_KEY || ''}
               geoJsonData={geoJsonData || {}} // Provide a default empty object if geoJsonData is null
+              actionResponse={actionResponse}
             />
           </div>
         </div>

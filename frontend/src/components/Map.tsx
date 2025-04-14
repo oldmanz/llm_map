@@ -9,9 +9,10 @@ interface MapProps {
   zoom: number;
   apiKey: string;
   geoJsonData: Record<string, any>; // A map of layer names to GeoJSON data
+  actionResponse: any;
 }
 
-const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
+const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData, actionResponse }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -175,6 +176,44 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
     });
   };
 
+  // Function to handle map actions
+  const handleMapAction = (response: any) => {
+    if (response && response.action && mapRef.current) {
+      const { intent, parameters } = response.action;
+      switch (intent) {
+        case 'ZOOM_IN':
+          mapRef.current.zoomIn(parameters.levels || 1);
+          break;
+        case 'ZOOM_OUT':
+          mapRef.current.zoomOut(parameters.levels || 1);
+          break;
+        case 'SET_ZOOM':
+          mapRef.current.setZoom(parameters.level);
+          break;
+        case 'PAN':
+          mapRef.current.panBy([parameters.x, parameters.y]);
+          break;
+        case 'FLY_TO':
+          mapRef.current.flyTo({ center: [parameters.lng, parameters.lat] });
+          break;
+        case 'JUMP_TO':
+          mapRef.current.jumpTo({ center: [parameters.lng, parameters.lat] });
+          break;
+        case 'ROTATE':
+          mapRef.current.rotateTo(parameters.degrees);
+          break;
+        case 'PITCH':
+          mapRef.current.setPitch(parameters.degrees);
+          break;
+        case 'RESET_VIEW':
+          mapRef.current.jumpTo({ center: parameters.center, zoom: parameters.zoom });
+          break;
+        default:
+          console.log('Unknown action intent:', intent);
+      }
+    }
+  };
+
   useEffect(() => {
     initializeMap();
 
@@ -186,6 +225,10 @@ const Map: React.FC<MapProps> = ({ lat, lon, zoom, apiKey, geoJsonData }) => {
   useEffect(() => {
     updateMapLayers();
   }, [geoJsonData]);
+
+  useEffect(() => {
+    handleMapAction(actionResponse);
+  }, [actionResponse]);
 
   return <div ref={mapContainerRef} className="map-container" />;
 };

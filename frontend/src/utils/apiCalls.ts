@@ -81,7 +81,7 @@ export class ApiCalls {
     return response.json();
   }
 
-  static async executeAction(action: string) {
+  static async getAction(action: string) {
     const urlSafeAction = encodeURIComponent(action);
     const response = await fetch(
       `http://127.0.0.1:8001/api/actions?action=${urlSafeAction}`,

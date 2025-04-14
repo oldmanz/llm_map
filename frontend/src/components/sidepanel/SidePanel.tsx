@@ -29,6 +29,7 @@ interface SidePanelProps {
   layers: Layer[];
   onToggleLayer: (layerName: string) => void;
   onClearFilter: (layerName: string) => void;
+  onActionResponse: (response: any) => void;
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({
@@ -42,6 +43,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
   layers,
   onToggleLayer,
   onClearFilter,
+  onActionResponse,
 }) => {
   const [activeTab, setActiveTab] = useState<'search' | 'saved' | 'layers' | 'actions'>(
     'search',
@@ -147,7 +149,9 @@ const SidePanel: React.FC<SidePanelProps> = ({
             onClearFilter={onClearFilter}
           />
         ) : (
-          <Actions />
+          <Actions 
+          onActionResponse={onActionResponse}
+          />
         )}
       </div>
     </div>
