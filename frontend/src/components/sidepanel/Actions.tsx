@@ -1,14 +1,16 @@
 import React, { KeyboardEvent, FormEvent, useState } from 'react';
 import { ApiCalls } from '../../utils/apiCalls';
+import { AVAILABLE_ACTIONS } from '../../config/actions';
 
 interface ActionsProps {
-  onActionResponse: (response: any) => { error?: string; success?: string };
+  onActionResponse: (response: any) => { error?: string; success?: string; actions?: Record<string, string> };
 }
 interface Message {
     message: string;
     response: any;
     error?: string;
     success?: string;
+    actions?: Record<string, string>;
 }
 
 const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
@@ -19,17 +21,26 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
         e.preventDefault();
         const response = await ApiCalls.getAction(actionMessage);
 
-
-        const result = onActionResponse(response);
+        if (response?.action?.intent === 'HELP') {
+            const message: Message = {
+                message: actionMessage,
+                response,
+                success: "Available actions:",
+                actions: AVAILABLE_ACTIONS
+            };
+            setMessageHistory(prev => [...prev, message]);
+        } else {
+            const result = onActionResponse(response);
+            const message: Message = { 
+                message: actionMessage, 
+                response,
+                error: result?.error,
+                success: result?.success,
+                actions: result?.actions
+            };
+            setMessageHistory(prev => [...prev, message]);
+        }
         
-        const message: Message = { 
-            message: actionMessage, 
-            response,
-            error: result?.error,
-            success: result?.success
-        };
-        
-        setMessageHistory(prev => [...prev, message]);
         setActionMessage('');
     };
 
@@ -82,11 +93,26 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
                         <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
                             You: {item.message}
                         </div>
-                        <div style={{ color: item.error ? 'red' : item.success ? 'green' : '#666' }}>
-                            Response: 
-                            {item.success && <div style={{ color: 'green' }}>{item.success}</div>}
-                            {item.error && <div style={{ color: 'red' }}>{item.error}</div>}
-                        </div>
+                        {item.error && (
+                            <div style={{ color: 'red', marginBottom: '4px' }}>
+                                Error: {item.error}
+                            </div>
+                        )}
+                        {item.actions && (
+                            <div style={{ marginTop: '8px' }}>
+                                {Object.entries(item.actions).map(([action, description]) => (
+                                    <div key={action} style={{ marginBottom: '4px' }}>
+                                        <strong>{action}:</strong> {description}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {item.success && (
+                            <div style={{ color: 'green', marginBottom: '4px' }}>
+                                {item.success}
+                            </div>
+                        )}
+
                     </div>
                 ))}
             </div>

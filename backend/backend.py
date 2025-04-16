@@ -348,6 +348,14 @@ def get_action_prompt(action):
     prompt = f"""
     Convert the following natural language map action into a structured JSON format.
     
+    If the user is asking for help or information about available actions, respond with:
+    {{
+        "intent": "HELP",
+        "parameters": {{
+            "type": "actions"
+        }}
+    }}
+
     Available actions and their parameters:
     1. ZOOM_IN - Zoom in one level
     2. ZOOM_OUT - Zoom out one level
@@ -361,7 +369,7 @@ def get_action_prompt(action):
     10. HEAT_MAP - Add, update or remove the heat map layer (requires "data" parameter: "action" and "layer" parameters: "action": "ADD" or "REMOVE", "layer": "fountains")
 
     The response must be a JSON object with:
-    - "intent": One of the action types in CAPS
+    - "intent": One of the action types in CAPS or "HELP"
     - "parameters": Object containing required parameters for the action
 
     Examples:
@@ -370,6 +378,8 @@ def get_action_prompt(action):
     - "go to London" -> {{"intent": "FLY_TO", "parameters": {{"lng": -0.1276, "lat": 51.5074}}}}
     - "rotate 90 degrees" -> {{"intent": "ROTATE", "parameters": {{"degrees": 90}}}}
     - "add heat map" -> {{"intent": "HEAT_MAP", "parameters": {{"action": "ADD", "layer": "fountains"}}}}
+    - "what can I do?" -> {{"intent": "HELP", "parameters": {{"type": "actions"}}}}
+    - "show me available actions" -> {{"intent": "HELP", "parameters": {{"type": "actions"}}}}
 
     Action: {action}
 
