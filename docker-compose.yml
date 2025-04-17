@@ -63,6 +63,7 @@ services:
     environment:
       BACKEND_URL: $BACKEND_URL
       BACKEND_EXTERNAL_PORT: $BACKEND_EXTERNAL_PORT
+      MAPTILER_API_KEY: $MAPTILER_API_KEY
     volumes:
       - ./frontend:/app
     depends_on:
