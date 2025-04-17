@@ -4,7 +4,6 @@ import Map from './Map';
 import NavBar from './NavBar';
 import SidePanel from './sidepanel/SidePanel';
 import { ApiCalls } from '../utils/apiCalls';
-import MAPTILER_API_KEY from '../config';
 
 const App: React.FC = () => {
   const [allFeatures, setAllFeatures] = useState<Record<string, any> | null>(
@@ -187,7 +186,7 @@ const App: React.FC = () => {
               lat={51.50634440212}
               lon={-0.1259234169603}
               zoom={14}
-              apiKey={MAPTILER_API_KEY || ''}
+              apiKey={process.env.MAPTILER_API_KEY || ''}
               geoJsonData={geoJsonData || {}}
               actionResponse={actionResponse}
               onActionResult={(result) => {

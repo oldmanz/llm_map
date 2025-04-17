@@ -1,3 +1,0 @@
-const MAPTILER_API_KEY = 'Your MapTiler API Key Here';
-
-export default MAPTILER_API_KEY;

@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/index.tsx',
@@ -34,4 +35,11 @@ module.exports = {
     hot: true,
     open: true,
   },
+  plugins: [
+    new webpack.EnvironmentPlugin({
+        'MAPTILER_API_KEY': "none",
+        'BACKEND_URL': "localhost",
+        'BACKEND_EXTERNAL_PORT': "8001",
+    }),
+],
 };
