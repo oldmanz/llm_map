@@ -7,7 +7,7 @@ ollama serve &
 sleep 10
 
 # Pull the Llama3 model
-ollama pull deepseek-coder-v2:16b
+ollama pull $LLM_MODEL
 
 # Keep the container running
 tail -f /dev/null

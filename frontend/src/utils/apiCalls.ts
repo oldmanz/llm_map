@@ -1,8 +1,14 @@
 export class ApiCalls {
+  static getAPIUrl() {
+    const apiUrl = process.env.BACKEND_URL + '/' + process.env.BACKEND_EXTERNAL_PORT;
+    return apiUrl;
+  }
+
   static async fetchNLQueryIds(nlQuery: string) {
     const urlSafeMessage = encodeURIComponent(nlQuery);
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/query?nl_query=${urlSafeMessage}`,
+      `${apiUrl}/query?nl_query=${urlSafeMessage}`,
       {
         method: 'GET',
         headers: {
@@ -19,15 +25,17 @@ export class ApiCalls {
   }
 
   static async fetchGeoJson(layerName: string) {
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/get-layer-geojson?layer=${layerName}`,
+      `${apiUrl}/get-layer-geojson?layer=${layerName}`,
     );
     return await response.json();
   }
 
   static async getLayerPopupProperties(layerId: string, parkId: number) {
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/get-layer-popup-properties?layer=${layerId}&park_id=${parkId}`,
+      `${apiUrl}/get-layer-popup-properties?layer=${layerId}&park_id=${parkId}`,
     );
     return await response.json();
   }
@@ -37,8 +45,9 @@ export class ApiCalls {
     sqlQuery: string,
     primaryLayer: string,
   ) {
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/save-query?nl_query=${encodeURIComponent(nlQuery)}&sql_query=${encodeURIComponent(sqlQuery)}&primary_layer=${encodeURIComponent(primaryLayer)}`,
+      `${apiUrl}/save-query?nl_query=${encodeURIComponent(nlQuery)}&sql_query=${encodeURIComponent(sqlQuery)}&primary_layer=${encodeURIComponent(primaryLayer)}`,
       {
         method: 'POST',
         headers: {
@@ -52,7 +61,8 @@ export class ApiCalls {
   static async getSavedQueries(): Promise<
     Array<{ id: number; nl_query: string; timestamp: string }>
   > {
-    const response = await fetch('http://127.0.0.1:8001/get-saved-queries');
+    const apiUrl = ApiCalls.getAPIUrl();
+    const response = await fetch(`${apiUrl}/get-saved-queries`);
     if (!response.ok) {
       throw new Error('Failed to fetch saved queries');
     }
@@ -60,8 +70,9 @@ export class ApiCalls {
   }
 
   static async deleteSavedQuery(id: number): Promise<void> {
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/delete-saved-query/${id}`,
+      `${apiUrl}/delete-saved-query/${id}`,
       {
         method: 'DELETE',
       },
@@ -72,8 +83,9 @@ export class ApiCalls {
   }
 
   static async loadSavedQuery(id: number) {
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/load-saved-query/${id}`,
+      `${apiUrl}/load-saved-query/${id}`,
     );
     if (!response.ok) {
       throw new Error('Failed to load saved query');
@@ -83,8 +95,9 @@ export class ApiCalls {
 
   static async getAction(action: string) {
     const urlSafeAction = encodeURIComponent(action);
+    const apiUrl = ApiCalls.getAPIUrl();
     const response = await fetch(
-      `http://127.0.0.1:8001/api/actions?action=${urlSafeAction}`,
+      `${apiUrl}/api/actions?action=${urlSafeAction}`,
       {
         method: 'POST',
         headers: {

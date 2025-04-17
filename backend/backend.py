@@ -9,14 +9,14 @@ import re
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+import os
 
 app = FastAPI()
-model = "llama3.2:3b" # "deepseek-coder-v2:16b"
 
 # Allow CORS for your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9001"],  # Adjust this to your frontend's URL
+    allow_origins=[f"{os.environ.get('FRONTEND_URL')}:{os.environ('FRONTEND_EXTERNAL_PORT')}"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,11 +24,16 @@ app.add_middleware(
 
 # Database connection
 DB_CONFIG = {
-    "dbname": "llmmap",
-    "user": "postgres",
-    "password": "postgres",
-    "host": "db",
-    "port": "5432"
+    "dbname": os.environ.get('POSTGRES_DB'),
+    "user": os.environ.get('POSTGRES_USER'),
+    "password": os.environ.get('POSTGRES_PASSWORD'),
+    "host": os.environ.get('POSTGRES_HOST'),
+    "port": os.environ.get('POSTGRES_PORT')
+}
+
+OLLAMA_CONFIG = {
+    "url": f"{os.environ.get('OLLAMA_HOST')}:{os.environ.get('OLLAMA_PORT')}",
+    "model": os.environ.get('LLM_MODEL')
 }
 
 def query_postgis(sql_query):
@@ -159,8 +164,8 @@ def get_sql_prompt(nl_query):
 def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
     prompt = get_sql_prompt(nl_query)
-    ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
-    response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
+    ollama_url = f"{OLLAMA_CONFIG['url']}/api/generate"  # Ollama runs locally
+    response = requests.post(ollama_url, json={"model": OLLAMA_CONFIG['model'], "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
         match = re.search(r"SELECT.*?;", response.text, re.DOTALL)
@@ -240,10 +245,10 @@ def get_layer_geojson(layer: str):
 
 @app.get("/test-ollama")
 def test_ollama():
-    print('This is a test prompt for {}'.format(model))
-    ollama_url = "http://ollama:11434/api/generate"  # Use the service name defined in docker-compose.yml
+    print('This is a test prompt for {}'.format(OLLAMA_CONFIG['model']))
+    ollama_url = f"{OLLAMA_CONFIG['url']}/api/generate"  # Use the service name defined in docker-compose.yml
     prompt = "tell me a short story about a boy name Sue"
-    response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
+    response = requests.post(ollama_url, json={"model": OLLAMA_CONFIG['model'], "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
         return response.json()
@@ -392,8 +397,8 @@ async def process_map_action(action: str = Query(..., description="Natural langu
 
     try:
         prompt = get_action_prompt(action)
-        ollama_url = "http://ollama:11434/api/generate"  # Ollama runs locally
-        response = requests.post(ollama_url, json={"model": model, "prompt": prompt, "stream": False})
+        ollama_url = f"{OLLAMA_CONFIG['url']}/api/generate"  # Ollama runs locally
+        response = requests.post(ollama_url, json={"model": OLLAMA_CONFIG['model'], "prompt": prompt, "stream": False})
     
         if response.status_code != 200:
             raise HTTPException(status_code=500, detail="Failed to process action with Ollama")
