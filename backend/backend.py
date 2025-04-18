@@ -32,7 +32,7 @@ DB_CONFIG = {
 }
 
 OLLAMA_CONFIG = {
-    "url": f"{os.environ.get('OLLAMA_HOST')}:{os.environ.get('OLLAMA_PORT')}",
+    "url": f"http://{os.environ.get('OLLAMA_HOST')}:{os.environ.get('OLLAMA_PORT')}",
     "model": os.environ.get('LLM_MODEL')
 }
 
@@ -164,7 +164,7 @@ def get_sql_prompt(nl_query):
 def natural_language_to_sql(nl_query):
     """Convert NL query to SQL using a local Ollama LLM."""
     prompt = get_sql_prompt(nl_query)
-    ollama_url = f"{OLLAMA_CONFIG['url']}/api/generate"  # Ollama runs locally
+    ollama_url = f"{OLLAMA_CONFIG['url']}/api/generate"  
     response = requests.post(ollama_url, json={"model": OLLAMA_CONFIG['model'], "prompt": prompt, "stream": False})
     
     if response.status_code == 200:
