@@ -25,7 +25,7 @@ To run the project locally:
 
    Sign up at [MapTiler](https://docs.maptiler.com/cloud/api/authentication-key/#api-key) and create an API key. You’ll need this to load the base map tiles.
 
-   - With your new api key, make a copy of the `frontend/src/config.ts.example` and name it `frontend/src/config.ts`
+   - With your new api key, make a copy of the `.env.example` and name it `.env`
    - Update the `MAPTILER_API_KEY` value
 
 3. **Start the project using Docker:**
