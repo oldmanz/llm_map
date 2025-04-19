@@ -12,4 +12,5 @@ COPY . .
 
 EXPOSE 9001
 
-CMD ["npm", "start"]
+
+CMD ["bash", "start.sh"]
