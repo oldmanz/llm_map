@@ -7,8 +7,8 @@ DB_CONFIG = {
     "dbname": os.getenv("POSTGRES_DB"),
     "user": os.getenv("POSTGRES_USER"),
     "password": os.getenv("POSTGRES_PASSWORD"),
-    "host": "localhost",
-    "port": "5432"
+    # Use the same connection method that the psql commands are using
+    "host": ""  # Empty host will use default socket connection
 }
 
 # Path to the GeoJSON files

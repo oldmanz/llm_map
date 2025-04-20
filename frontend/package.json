@@ -8,6 +8,7 @@
     "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
+    "dotenv-webpack": "^8.1.0",
     "maplibre-gl": "^5.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
