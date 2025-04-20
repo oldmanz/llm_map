@@ -1,4 +1,10 @@
-import React, { KeyboardEvent, FormEvent, useState } from 'react';
+import React, {
+  KeyboardEvent,
+  FormEvent,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
 import { ApiCalls } from '../../utils/apiCalls';
 import { AVAILABLE_ACTIONS } from '../../config/actions';
 
@@ -20,6 +26,14 @@ interface Message {
 const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
   const [actionMessage, setActionMessage] = useState('');
   const [messageHistory, setMessageHistory] = useState<Array<Message>>([]);
+  const chatDisplayRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatDisplayRef.current) {
+      chatDisplayRef.current.scrollTop = chatDisplayRef.current.scrollHeight;
+    }
+  }, [messageHistory]);
 
   const onSubmitMapAction = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -72,6 +86,7 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
       id="chatDisplay"
     >
       <div
+        ref={chatDisplayRef}
         style={{
           height: '100%',
           overflowY: 'auto',
