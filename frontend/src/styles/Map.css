@@ -1,6 +1,6 @@
 .map-container {
   height: calc(
-    100vh - 150px
+    100vh - 100px
   ); /* Subtract the header height (e.g., 60px) from the viewport height */
   width: 100%;
 }

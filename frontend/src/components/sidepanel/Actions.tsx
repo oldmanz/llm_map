@@ -63,16 +63,23 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: 'calc(100vh - 80px - 100px)',
+      }}
+      id="chatDisplay"
+    >
       <div
         style={{
-          flex: 1,
+          height: '100%',
           overflowY: 'auto',
           padding: '8px',
           border: '1px solid #ccc',
           borderRadius: '4px',
-          minHeight: '200px',
-          maxHeight: '300px',
+          backgroundColor: '#f5f5f5',
+          marginBottom: '16px',
         }}
       >
         {messageHistory.map((item, index) => (
@@ -115,8 +122,8 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
           style={{
             flex: 1,
             padding: '8px',
-            minHeight: '100px',
-            resize: 'both',
+            height: '100px',
+            resize: 'none',
           }}
         />
         <button type="submit" style={{ padding: '8px 16px' }}>
