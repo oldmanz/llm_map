@@ -102,7 +102,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
   };
 
   return (
-    <div style={{ width: '400px', borderLeft: '1px solid #ddd' }}>
+    <div>
       <div style={{ display: 'flex', borderBottom: '1px solid #ddd' }}>
         <TabButton
           label="Search"
@@ -126,7 +126,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
         />
       </div>
 
-      <div style={{ padding: '16px' }}>
+      <div style={{ paddingTop: '16px' }}>
         {activeTab === 'search' ? (
           <ChatInput
             message={message}
