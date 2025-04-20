@@ -130,7 +130,7 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
         style={{ display: 'flex', gap: '8px' }}
       >
         <textarea
-          placeholder="Type your Action..."
+          placeholder="Type your Action... or Ask 'What can I do?'"
           onKeyDown={handleKeyDown}
           onChange={handleInputChange}
           value={actionMessage}
