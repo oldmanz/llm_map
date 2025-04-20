@@ -83,17 +83,18 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
         flexDirection: 'column',
         height: 'calc(100vh - 80px - 100px)',
       }}
-      id="chatDisplay"
+      className="actionsTab"
     >
       <div
         ref={chatDisplayRef}
+        className="actionsChatDisplay"
         style={{
           height: '100%',
           overflowY: 'auto',
           padding: '8px',
           border: '1px solid #ccc',
           borderRadius: '4px',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#f8f9fa',
           marginBottom: '16px',
         }}
       >
@@ -139,9 +140,17 @@ const Actions: React.FC<ActionsProps> = ({ onActionResponse }) => {
             padding: '8px',
             height: '100px',
             resize: 'none',
+            border: '1px solid #cccccc',
           }}
         />
-        <button type="submit" style={{ padding: '8px 16px' }}>
+        <button
+          type="submit"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#f8f9fa',
+            border: '1px solid #cccccc',
+          }}
+        >
           Submit
         </button>
       </form>
