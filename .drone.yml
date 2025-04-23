@@ -1,27 +1,4 @@
 kind: pipeline
-name: build
-
-steps:
-- name: build 
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    repo: registry.oldmanz.com/llm_map/ollama
-    registry: registry.oldmanz.com
-    context: ollama
-    dockerfile: ollama/Dockerfile
-    tags:
-    - latest
-    
-trigger:
-  branch:
-  - main
-
-
-kind: pipeline
 type: ssh
 name: deploy
 
@@ -36,12 +13,8 @@ server:
 steps:
 - name: deploy
   environment:
-    DOCKER_USERNAME: 
-      from_secret: docker_username
-    DOCKER_PASSWORD:
-      from_secret: docker_password
   commands:
-    - echo $DOCKER_PASSWORD | docker login registry.oldmanz.com --username $DOCKER_USERNAME --password-stdin
+    - docker compose -f docker-compose-deploy.yml build
     - docker compose -f docker-compose-deploy.yml up -d
 
 trigger:
